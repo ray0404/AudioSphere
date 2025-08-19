@@ -35,6 +35,35 @@ export function useAudioPlayer() {
   useEffect(() => {
     audioManagerRef.current = new AudioManager();
     
+    // Initialize Media Session API for PWA controls
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (state.currentTrack && !state.isPlaying) {
+          play(state.currentTrack);
+        }
+      });
+      
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (state.isPlaying) {
+          pause();
+        }
+      });
+      
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        nextTrack();
+      });
+      
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        previousTrack();
+      });
+      
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (details.seekTime !== undefined) {
+          seek(details.seekTime);
+        }
+      });
+    }
+    
     return () => {
       audioManagerRef.current?.destroy();
     };
@@ -91,6 +120,20 @@ export function useAudioPlayer() {
     if (state.currentTrack) {
       audioManagerRef.current.play(state.currentTime);
       setState(prev => ({ ...prev, isPlaying: true }));
+      
+      // Update Media Session metadata for PWA controls
+      if ('mediaSession' in navigator && state.currentTrack) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: state.currentTrack.title || 'Unknown Title',
+          artist: state.currentTrack.artist || 'Unknown Artist',
+          album: state.currentTrack.album || 'Unknown Album',
+          artwork: state.currentTrack.albumArt ? [
+            { src: state.currentTrack.albumArt, sizes: '512x512', type: 'image/jpeg' }
+          ] : []
+        });
+        
+        navigator.mediaSession.playbackState = 'playing';
+      }
     }
   }, [state.currentTrack, state.currentTime, loadTrack]);
 
@@ -99,6 +142,11 @@ export function useAudioPlayer() {
     
     audioManagerRef.current.pause();
     setState(prev => ({ ...prev, isPlaying: false }));
+    
+    // Update Media Session playback state
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'paused';
+    }
   }, []);
 
   const togglePlayPause = useCallback(() => {
@@ -109,12 +157,16 @@ export function useAudioPlayer() {
     }
   }, [state.isPlaying, play, pause]);
 
-  const seekTo = useCallback((position: number) => {
+  const seek = useCallback((position: number) => {
     if (!audioManagerRef.current) return;
     
     audioManagerRef.current.seekTo(position);
     setState(prev => ({ ...prev, currentTime: position }));
   }, []);
+
+  const seekTo = useCallback((position: number) => {
+    seek(position);
+  }, [seek]);
 
   const setVolume = useCallback((volume: number) => {
     if (!audioManagerRef.current) return;
