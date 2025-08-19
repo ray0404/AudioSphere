@@ -33,14 +33,19 @@
   ],
   "shortcuts": [
     {
+      "name": "Scan Device",
+      "url": "/?action=scan-device",
+      "description": "Scan device for music files"
+    },
+    {
       "name": "Upload Music",
       "url": "/?action=upload",
       "description": "Upload local music files"
     },
     {
-      "name": "Connect Google Drive",
-      "url": "/?action=google-drive",
-      "description": "Connect to Google Drive"
+      "name": "Library",
+      "url": "/library",
+      "description": "View your music library"
     }
   ]
 }

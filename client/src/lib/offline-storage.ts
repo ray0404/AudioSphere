@@ -1,10 +1,10 @@
 // Offline storage manager for PWA functionality
 import { Track } from '@shared/schema';
 
-const DB_NAME = 'SoundWaveOffline';
-const DB_VERSION = 1;
+const DB_NAME = 'SoundWaveDB'; // Unified DB name with service worker
+const DB_VERSION = 2;
 const TRACKS_STORE = 'tracks';
-const AUDIO_STORE = 'audio';
+const AUDIO_STORE = 'audioBlobs'; // Match service worker store name
 const PLAYLISTS_STORE = 'playlists';
 
 export class OfflineStorage {
@@ -45,6 +45,12 @@ export class OfflineStorage {
         if (!db.objectStoreNames.contains(PLAYLISTS_STORE)) {
           const playlistsStore = db.createObjectStore(PLAYLISTS_STORE, { keyPath: 'id' });
           playlistsStore.createIndex('name', 'name', { unique: false });
+        }
+
+        // Create offline queue store for background sync
+        if (!db.objectStoreNames.contains('offlineQueue')) {
+          const queueStore = db.createObjectStore('offlineQueue', { keyPath: 'id' });
+          queueStore.createIndex('timestamp', 'timestamp', { unique: false });
         }
       };
     });
