@@ -253,23 +253,27 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-center space-x-8 mb-6">
+          <div className="flex items-center justify-center space-x-8 mb-8">
             <button
-              onClick={(e) => {
+              tabIndex={-1}
+              onMouseDown={(e) => {
                 previousTrack();
-                e.currentTarget.blur();
+                e.preventDefault();
               }}
-              className="text-white hover:bg-white/10 active:bg-white/20 p-3 rounded-lg transition-colors focus:outline-none focus:ring-0"
+              className="text-white hover:bg-white/10 p-3 rounded-lg transition-colors [&:focus]:outline-none [&:focus]:ring-0 [&:focus]:bg-transparent"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <SkipBack className="w-8 h-8" fill="currentColor" />
             </button>
 
             <button
-              onClick={(e) => {
+              tabIndex={-1}
+              onMouseDown={(e) => {
                 isPlaying ? pause() : play(currentTrack);
-                e.currentTarget.blur();
+                e.preventDefault();
               }}
-              className="text-white hover:bg-white/10 active:bg-white/20 p-4 bg-white/10 rounded-full transition-colors focus:outline-none focus:ring-0"
+              className="text-white hover:bg-white/10 p-4 bg-white/10 rounded-full transition-colors [&:focus]:outline-none [&:focus]:ring-0 [&:focus]:bg-white/10"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               {isPlaying ? (
                 <Pause className="w-10 h-10" fill="currentColor" />
@@ -279,11 +283,13 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
             </button>
 
             <button
-              onClick={(e) => {
+              tabIndex={-1}
+              onMouseDown={(e) => {
                 nextTrack();
-                e.currentTarget.blur();
+                e.preventDefault();
               }}
-              className="text-white hover:bg-white/10 active:bg-white/20 p-3 rounded-lg transition-colors focus:outline-none focus:ring-0"
+              className="text-white hover:bg-white/10 p-3 rounded-lg transition-colors [&:focus]:outline-none [&:focus]:ring-0 [&:focus]:bg-transparent"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <SkipForward className="w-8 h-8" fill="currentColor" />
             </button>
@@ -292,14 +298,16 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
           {/* Secondary Controls */}
           <div className="flex items-center justify-between opacity-70">
             <button
-              onClick={(e) => {
+              tabIndex={-1}
+              onMouseDown={(e) => {
                 toggleShuffle();
-                e.currentTarget.blur();
+                e.preventDefault();
               }}
               className={cn(
-                "hover:bg-white/10 active:bg-white/20 p-2 rounded-lg transition-colors focus:outline-none focus:ring-0",
+                "hover:bg-white/10 p-2 rounded-lg transition-colors [&:focus]:outline-none [&:focus]:ring-0 [&:focus]:bg-transparent",
                 shuffle ? "text-accent" : "text-white"
               )}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <Shuffle className="w-5 h-5" />
             </button>
@@ -316,14 +324,16 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
             </div>
 
             <button
-              onClick={(e) => {
+              tabIndex={-1}
+              onMouseDown={(e) => {
                 toggleRepeat();
-                e.currentTarget.blur();
+                e.preventDefault();
               }}
               className={cn(
-                "hover:bg-white/10 active:bg-white/20 p-2 rounded-lg transition-colors focus:outline-none focus:ring-0",
+                "hover:bg-white/10 p-2 rounded-lg transition-colors [&:focus]:outline-none [&:focus]:ring-0 [&:focus]:bg-transparent",
                 repeat ? "text-accent" : "text-white"
               )}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <Repeat className="w-5 h-5" />
             </button>
@@ -331,7 +341,7 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
         </div>
 
         {/* Safe area for mobile */}
-        <div className="h-8 md:h-4" />
+        <div className="h-12 md:h-8" />
       </div>
     </div>
   );
