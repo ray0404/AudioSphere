@@ -173,6 +173,8 @@ export function useDeviceScanner() {
         localFile: file,
       };
 
+
+
       return track;
     } catch (err) {
       console.error(`Error processing ${file.name}:`, err);
@@ -247,9 +249,10 @@ export function useDeviceScanner() {
           // Store file reference in IndexedDB for offline/persistent access
           if (localFile) {
             try {
-              await offlineStorage.saveAudioBlob(savedTrack.id, localFile);
+              await offlineStorage.saveAudioBlob(savedTrack.id, localFile, track.fileUrl);
+              console.log(`[DeviceScanner] Cached audio blob for offline playback: ${localFile.name}`);
             } catch (err) {
-              console.warn('Failed to save audio for offline use:', err);
+              console.warn('[DeviceScanner] Failed to save audio for offline use:', err);
             }
           }
         } catch (err) {

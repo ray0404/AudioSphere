@@ -70,7 +70,35 @@ export class OfflineStorage {
       });
     }
 
-    console.log(`Saved ${tracks.length} tracks offline`);
+    console.log(`[OfflineStorage] Saved ${tracks.length} tracks offline`);
+  }
+
+  async saveAudioBlob(trackId: string, audioBlob: Blob, trackUrl?: string): Promise<void> {
+    if (!this.db) await this.init();
+
+    const transaction = this.db!.transaction([AUDIO_STORE], 'readwrite');
+    const store = transaction.objectStore(AUDIO_STORE);
+
+    await new Promise<void>((resolve, reject) => {
+      const request = store.put({
+        trackId,
+        trackUrl,
+        audioData: audioBlob,
+        timestamp: Date.now()
+      });
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+
+    console.log(`[OfflineStorage] Saved audio blob for track: ${trackId}`);
+    
+    // Also notify service worker to cache the blob
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'CACHE_AUDIO_BLOB',
+        data: { trackId, audioBlob, trackUrl }
+      });
+    }
   }
 
   async getTracks(): Promise<Track[]> {
@@ -92,35 +120,7 @@ export class OfflineStorage {
     });
   }
 
-  async saveAudioBlob(trackId: string, blob: Blob): Promise<void> {
-    if (!this.db) await this.init();
 
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([AUDIO_STORE], 'readwrite');
-      const store = transaction.objectStore(AUDIO_STORE);
-      const request = store.put({ trackId, blob, timestamp: Date.now() });
-
-      request.onsuccess = () => {
-        console.log(`Saved audio blob for track ${trackId}`);
-        
-        // Also cache in service worker if available
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({
-            type: 'CACHE_AUDIO',
-            url: `/offline-audio/${trackId}`,
-            blob
-          });
-        }
-        
-        resolve();
-      };
-
-      request.onerror = () => {
-        console.error('Failed to save audio blob');
-        reject(request.error);
-      };
-    });
-  }
 
   async getAudioBlob(trackId: string): Promise<Blob | null> {
     if (!this.db) await this.init();
@@ -132,11 +132,11 @@ export class OfflineStorage {
 
       request.onsuccess = () => {
         const result = request.result;
-        resolve(result ? result.blob : null);
+        resolve(result ? result.audioData : null);
       };
 
       request.onerror = () => {
-        console.error('Failed to get audio blob');
+        console.error('[OfflineStorage] Failed to get audio blob');
         reject(request.error);
       };
     });
