@@ -1,58 +1,103 @@
-const CACHE_NAME = 'soundwave-v2';
-const STATIC_CACHE = 'soundwave-static-v2';
-const DATA_CACHE = 'soundwave-data-v2';
-const AUDIO_CACHE = 'soundwave-audio-v2';
+const CACHE_VERSION = 'v3';
+const STATIC_CACHE = `soundwave-static-${CACHE_VERSION}`;
+const DATA_CACHE = `soundwave-data-${CACHE_VERSION}`;
+const AUDIO_CACHE = `soundwave-audio-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `soundwave-runtime-${CACHE_VERSION}`;
 
-// Critical resources needed for offline functionality
-const urlsToCache = [
+// Critical resources for offline functionality
+const CRITICAL_RESOURCES = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
 ];
 
-// Install event - cache critical assets
+// Extended resources to cache for better offline experience
+const EXTENDED_RESOURCES = [
+  '/library',
+  '/search',
+];
+
+// Install event - cache critical assets for offline functionality
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing...');
+  console.log('[Service Worker] Installing version', CACHE_VERSION);
   
   event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then((cache) => {
-        console.log('[Service Worker] Caching critical assets');
-        return cache.addAll(urlsToCache);
+    Promise.all([
+      // Cache critical resources
+      caches.open(STATIC_CACHE).then((cache) => {
+        console.log('[Service Worker] Caching critical resources');
+        return cache.addAll(CRITICAL_RESOURCES);
+      }),
+      // Pre-cache extended resources for better UX
+      caches.open(RUNTIME_CACHE).then((cache) => {
+        console.log('[Service Worker] Pre-caching extended resources');
+        return Promise.allSettled(
+          EXTENDED_RESOURCES.map(url => 
+            fetch(url).then(response => {
+              if (response.ok) {
+                return cache.put(url, response);
+              }
+            }).catch(err => console.log('Pre-cache failed for:', url))
+          )
+        );
       })
-      .then(() => {
-        // Skip waiting to activate immediately
-        return self.skipWaiting();
-      })
+    ]).then(() => {
+      console.log('[Service Worker] Installation complete');
+      return self.skipWaiting();
+    })
   );
 });
 
-// Enhanced fetch event with offline-first strategy
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  console.log('[Service Worker] Activating version', CACHE_VERSION);
+  
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName.startsWith('soundwave-') && !cacheName.includes(CACHE_VERSION)) {
+            console.log('[Service Worker] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+      console.log('[Service Worker] Activation complete');
+      return self.clients.claim();
+    })
+  );
+});
+
+// Enhanced fetch event with cache-first strategy optimized for audio apps
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // Handle different types of requests
-  if (request.method === 'GET') {
-    // Handle API requests
-    if (url.pathname.startsWith('/api/')) {
-      event.respondWith(handleApiRequest(request));
-    }
-    // Handle static assets (JS, CSS, images)
-    else if (request.destination === 'script' || 
-             request.destination === 'style' || 
-             request.destination === 'image' ||
-             url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|gif|woff2?)$/)) {
-      event.respondWith(handleStaticAsset(request));
-    }
-    // Handle audio files and blob URLs
-    else if (url.protocol === 'blob:' || 
-             request.destination === 'audio' ||
-             url.pathname.match(/\.(mp3|wav|flac|m4a|aac|ogg|opus)$/)) {
-      event.respondWith(handleAudioRequest(request));
-    }
-    // Handle navigation requests
-    else if (request.mode === 'navigate' || request.destination === 'document') {
+  // Only handle GET requests
+  if (request.method !== 'GET') return;
+  
+  // Handle different types of requests with optimized strategies
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(handleApiRequest(request));
+  }
+  // Handle static assets (JS, CSS, images) - Cache First
+  else if (request.destination === 'script' || 
+           request.destination === 'style' || 
+           request.destination === 'image' ||
+           url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|gif|woff2?|ico)$/)) {
+    event.respondWith(handleStaticAsset(request));
+  }
+  // Handle audio files - Cache First with special handling
+  else if (url.protocol === 'blob:' || 
+           request.destination === 'audio' ||
+           url.pathname.match(/\.(mp3|wav|flac|m4a|aac|ogg|opus|webm)$/)) {
+    event.respondWith(handleAudioRequest(request));
+  }
+  // Handle navigation requests - Network First with cache fallback
+  else if (request.mode === 'navigate' || request.destination === 'document') {
       event.respondWith(handleNavigationRequest(request));
     }
     // Default handling
