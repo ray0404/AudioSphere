@@ -1,6 +1,7 @@
 import { Track } from '@shared/schema';
 import { Play, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TrackCardProps {
   track: Track;
@@ -10,6 +11,8 @@ interface TrackCardProps {
 }
 
 export function TrackCard({ track, isPlaying, onPlay, className }: TrackCardProps) {
+  const isMobile = useIsMobile();
+  
   const handleClick = () => {
     onPlay(track);
   };
@@ -19,7 +22,8 @@ export function TrackCard({ track, isPlaying, onPlay, className }: TrackCardProp
   return (
     <div
       className={cn(
-        "track-card bg-secondary/40 p-4 rounded-lg cursor-pointer group relative",
+        "track-card bg-secondary/40 rounded-lg cursor-pointer group relative",
+        isMobile ? "p-3" : "p-4",
         className
       )}
       onClick={handleClick}
@@ -37,22 +41,26 @@ export function TrackCard({ track, isPlaying, onPlay, className }: TrackCardProp
         />
         
         {/* Play Button Overlay */}
-        <div className="play-button absolute bottom-2 right-2">
+        <div className={cn(
+          "play-button absolute",
+          isMobile ? "bottom-1 right-1" : "bottom-2 right-2"
+        )}>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onPlay(track);
             }}
             className={cn(
-              "w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-lg transition-all",
+              "bg-primary rounded-full flex items-center justify-center shadow-lg transition-all",
               "hover:scale-105 hover:bg-primary/90",
+              isMobile ? "w-8 h-8" : "w-10 h-10",
               isPlaying ? "opacity-100" : "opacity-0 group-hover:opacity-100"
             )}
           >
             {isPlaying ? (
-              <Pause className="w-4 h-4 text-white" />
+              <Pause className={cn("text-white", isMobile ? "w-3 h-3" : "w-4 h-4")} />
             ) : (
-              <Play className="w-4 h-4 text-white ml-0.5" />
+              <Play className={cn("text-white ml-0.5", isMobile ? "w-3 h-3" : "w-4 h-4")} />
             )}
           </button>
         </div>
@@ -60,13 +68,16 @@ export function TrackCard({ track, isPlaying, onPlay, className }: TrackCardProp
 
       {/* Track Info */}
       <div className="space-y-1">
-        <h4 className="font-medium text-sm text-white truncate" title={track.title}>
+        <h4 className={cn(
+          "font-medium text-white truncate",
+          isMobile ? "text-xs" : "text-sm"
+        )} title={track.title}>
           {track.title}
         </h4>
         <p className="text-neutral text-xs truncate" title={track.artist}>
           {track.artist}
         </p>
-        {track.album && (
+        {track.album && !isMobile && (
           <p className="text-neutral text-xs truncate" title={track.album}>
             {track.album}
           </p>

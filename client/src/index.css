@@ -63,6 +63,13 @@
     overflow: hidden;
   }
 
+  /* Mobile-first responsive design adjustments */
+  @media (max-width: 768px) {
+    body {
+      font-size: 14px;
+    }
+  }
+
   html {
     font-family: var(--font-inter);
   }
@@ -89,6 +96,25 @@
 /* Smooth transitions */
 * {
   transition: all 0.2s ease-in-out;
+}
+
+/* Mobile touch optimizations */
+@media (max-width: 768px) {
+  /* Larger touch targets */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better scroll performance on mobile */
+  .track-card {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Optimize for mobile viewport */
+  .mobile-optimized {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* Audio player styles */

@@ -32,6 +32,112 @@ export function useGoogleDrive() {
   const GOOGLE_DRIVE_API_KEY = import.meta.env.VITE_GOOGLE_DRIVE_API_KEY || '';
   const SHARED_FOLDER_ID = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID || '';
 
+  const extractFolderIdFromUrl = (url: string): string | null => {
+    // Extract folder ID from various Google Drive URL formats
+    const patterns = [
+      /\/folders\/([a-zA-Z0-9-_]+)/,
+      /id=([a-zA-Z0-9-_]+)/,
+      /^([a-zA-Z0-9-_]+)$/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    
+    return null;
+  };
+
+  const loadGoogleDriveFilesByUrl = useCallback(async (folderUrl: string) => {
+    const folderId = extractFolderIdFromUrl(folderUrl);
+    if (!folderId) {
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Invalid Google Drive folder URL' 
+      }));
+      toast({
+        title: "Invalid URL",
+        description: "Please provide a valid Google Drive folder URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      // Try to access the folder using the Drive API without authentication
+      // This works for publicly shared folders
+      const audioMimeTypes = [
+        'audio/mpeg',
+        'audio/wav',
+        'audio/flac',
+        'audio/m4a',
+        'audio/aac',
+        'audio/ogg'
+      ];
+
+      const mimeTypeQuery = audioMimeTypes.map(type => `mimeType='${type}'`).join(' or ');
+      const query = `'${folderId}' in parents and (${mimeTypeQuery}) and trashed=false`;
+      
+      // Try without API key first (for public folders)
+      let url = new URL('https://www.googleapis.com/drive/v3/files');
+      url.searchParams.append('q', query);
+      url.searchParams.append('fields', 'files(id,name,mimeType,size,thumbnailLink)');
+      url.searchParams.append('pageSize', '100');
+
+      let response = await fetch(url.toString());
+      
+      // If that fails, try with API key if available
+      if (!response.ok && GOOGLE_DRIVE_API_KEY) {
+        url.searchParams.append('key', GOOGLE_DRIVE_API_KEY);
+        response = await fetch(url.toString());
+      }
+      
+      if (!response.ok) {
+        throw new Error(`Unable to access folder. Make sure it's shared publicly with "Anyone with the link can view" permissions.`);
+      }
+
+      const data = await response.json();
+      
+      const driveFiles: GoogleDriveFile[] = data.files.map((file: any) => ({
+        id: file.id,
+        name: file.name,
+        mimeType: file.mimeType,
+        size: file.size || '0',
+        downloadUrl: `https://drive.google.com/uc?id=${file.id}&export=download`,
+        thumbnailLink: file.thumbnailLink,
+      }));
+
+      setState(prev => ({
+        ...prev,
+        isConnected: true,
+        isLoading: false,
+        files: driveFiles,
+      }));
+
+      toast({
+        title: "Google Drive Connected",
+        description: `Found ${driveFiles.length} audio files in the shared folder`,
+      });
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to connect to Google Drive folder';
+      setState(prev => ({
+        ...prev,
+        isConnected: false,
+        isLoading: false,
+        error: errorMessage,
+      }));
+
+      toast({
+        title: "Google Drive Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
   const loadGoogleDriveFiles = useCallback(async () => {
     if (!GOOGLE_DRIVE_API_KEY || !SHARED_FOLDER_ID) {
       setState(prev => ({ 
@@ -81,7 +187,7 @@ export function useGoogleDrive() {
         name: file.name,
         mimeType: file.mimeType,
         size: file.size || '0',
-        downloadUrl: `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${GOOGLE_DRIVE_API_KEY}`,
+        downloadUrl: `https://drive.google.com/uc?id=${file.id}&export=download`,
         thumbnailLink: file.thumbnailLink,
       }));
 
@@ -192,6 +298,7 @@ export function useGoogleDrive() {
     error: state.error,
     files: state.files,
     loadGoogleDriveFiles,
+    loadGoogleDriveFilesByUrl,
     importTracksFromDrive,
     disconnect,
   };

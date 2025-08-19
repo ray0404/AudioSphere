@@ -12,7 +12,9 @@ import { useGoogleDrive } from "@/hooks/use-google-drive";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Menu } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 function Router() {
   return (
@@ -31,12 +33,17 @@ function Router() {
 function App() {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showGoogleDriveDialog, setShowGoogleDriveDialog] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [folderUrl, setFolderUrl] = useState('');
+  
+  const isMobile = useIsMobile();
   
   const { 
     isConnected: isGoogleDriveConnected, 
     isLoading: isGoogleDriveLoading,
     files: googleDriveFiles,
     loadGoogleDriveFiles,
+    loadGoogleDriveFilesByUrl,
     importTracksFromDrive,
     disconnect: disconnectGoogleDrive,
   } = useGoogleDrive();
@@ -55,6 +62,13 @@ function App() {
     await loadGoogleDriveFiles();
   };
 
+  const handleConnectByUrl = async () => {
+    if (folderUrl.trim()) {
+      await loadGoogleDriveFilesByUrl(folderUrl.trim());
+      setFolderUrl('');
+    }
+  };
+
   const handleImportGoogleDriveFiles = async () => {
     const fileIds = googleDriveFiles.map(file => file.id);
     await importTracksFromDrive(fileIds);
@@ -65,12 +79,57 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="flex h-screen bg-background text-foreground overflow-hidden">
-          <Sidebar 
-            onUploadClick={handleUploadClick}
-            onGoogleDriveClick={handleGoogleDriveClick}
-            isGoogleDriveConnected={isGoogleDriveConnected}
-          />
+          {/* Desktop Sidebar */}
+          {!isMobile && (
+            <Sidebar 
+              onUploadClick={handleUploadClick}
+              onGoogleDriveClick={handleGoogleDriveClick}
+              isGoogleDriveConnected={isGoogleDriveConnected}
+            />
+          )}
+          
+          {/* Mobile Sidebar Overlay */}
+          {isMobile && showMobileSidebar && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <div 
+                className="fixed inset-0 bg-black/50" 
+                onClick={() => setShowMobileSidebar(false)}
+              />
+              <div className="fixed left-0 top-0 h-full w-64 z-50">
+                <Sidebar 
+                  onUploadClick={() => {
+                    handleUploadClick();
+                    setShowMobileSidebar(false);
+                  }}
+                  onGoogleDriveClick={() => {
+                    handleGoogleDriveClick();
+                    setShowMobileSidebar(false);
+                  }}
+                  isGoogleDriveConnected={isGoogleDriveConnected}
+                />
+              </div>
+            </div>
+          )}
+          
           <main className="flex-1 flex flex-col min-w-0">
+            {/* Mobile Header */}
+            {isMobile && (
+              <div className="bg-secondary border-b border-neutral/20 p-4 flex items-center justify-between lg:hidden">
+                <button
+                  onClick={() => setShowMobileSidebar(true)}
+                  className="text-white hover:text-accent transition-colors"
+                >
+                  <Menu className="w-6 h-6" />
+                </button>
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                    <div className="w-3 h-3 bg-white rounded-full" />
+                  </div>
+                  <h1 className="text-lg font-bold text-white">SoundWave</h1>
+                </div>
+                <div className="w-6" /> {/* Spacer for centering */}
+              </div>
+            )}
             <Router />
           </main>
           <BottomPlayer />
@@ -115,20 +174,54 @@ function App() {
                   <p className="text-neutral">
                     Connect to Google Drive to access music files from your shared folder.
                   </p>
-                  <Button 
-                    onClick={handleConnectGoogleDrive}
-                    disabled={isGoogleDriveLoading}
-                    className="w-full"
-                  >
-                    {isGoogleDriveLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Connecting...
-                      </>
-                    ) : (
-                      'Connect to Google Drive'
-                    )}
-                  </Button>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-white mb-2 block">
+                        Share a Google Drive folder link:
+                      </label>
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="https://drive.google.com/drive/folders/..."
+                          value={folderUrl}
+                          onChange={(e) => setFolderUrl(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button 
+                          onClick={handleConnectByUrl}
+                          disabled={isGoogleDriveLoading || !folderUrl.trim()}
+                          size="sm"
+                        >
+                          {isGoogleDriveLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            'Connect'
+                          )}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-neutral mt-1">
+                        Make sure the folder is shared publicly or with "Anyone with the link can view"
+                      </p>
+                    </div>
+                    
+                    <div className="text-center text-neutral text-sm">or</div>
+                    
+                    <Button 
+                      onClick={handleConnectGoogleDrive}
+                      disabled={isGoogleDriveLoading}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      {isGoogleDriveLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Connecting...
+                        </>
+                      ) : (
+                        'Use API Key (Advanced)'
+                      )}
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <>
