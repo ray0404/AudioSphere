@@ -142,8 +142,10 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-50 transition-all duration-500 ease-out",
-        isOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+        "fixed inset-0 z-[9999] transition-all duration-500 ease-out",
+        isOpen 
+          ? "translate-y-0 opacity-100" 
+          : "translate-y-full opacity-0 pointer-events-none"
       )}
       style={{
         background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`

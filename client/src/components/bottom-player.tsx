@@ -56,16 +56,19 @@ export function BottomPlayer() {
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (isMobile) {
-      setStartY(e.touches[0].clientY);
-    }
+    e.preventDefault();
+    const startY = e.touches[0].clientY;
+    setStartY(startY);
+    console.log('Touch start, startY:', startY);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (startY > 0) {
-      const deltaY = startY - e.touches[0].clientY;
-      console.log('Touch move, deltaY:', deltaY);
-      if (deltaY > 30) { // Swipe up threshold
+      e.preventDefault();
+      const currentY = e.touches[0].clientY;
+      const deltaY = startY - currentY;
+      console.log('Touch move, deltaY:', deltaY, 'currentY:', currentY, 'startY:', startY);
+      if (deltaY > 20) { // Reduced threshold for easier swipe
         console.log('Swipe up detected, opening Now Playing');
         setShowNowPlaying(true);
         setStartY(0);
@@ -105,9 +108,9 @@ export function BottomPlayer() {
         
         {/* Track Info & Controls */}
         <div className="flex items-center justify-between">
-          {/* Track Info */}
+          {/* Track Info - Clickable/Swipeable Area */}
           <div 
-            className="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer"
+            className="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer active:bg-white/10 hover:bg-white/5 transition-colors rounded-lg p-2 -m-2 select-none"
             onClick={handleTrackAreaClick}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
@@ -300,6 +303,20 @@ export function BottomPlayer() {
         </div>
       </div>
     </div>
+
+    {/* Debug indicator and test button */}
+    {showNowPlaying && (
+      <div className="fixed top-4 right-4 bg-red-500 text-white px-2 py-1 rounded text-xs z-[9999]">
+        Now Playing State: OPEN
+      </div>
+    )}
+    
+    <button 
+      onClick={() => setShowNowPlaying(true)}
+      className="fixed top-4 left-4 bg-blue-500 text-white px-2 py-1 rounded text-xs z-[9999]"
+    >
+      Test Now Playing
+    </button>
 
     <NowPlaying 
       isOpen={showNowPlaying} 
