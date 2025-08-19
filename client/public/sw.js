@@ -1,182 +1,110 @@
-const CACHE_VERSION = 'v3';
-const STATIC_CACHE = `soundwave-static-${CACHE_VERSION}`;
-const DATA_CACHE = `soundwave-data-${CACHE_VERSION}`;
-const AUDIO_CACHE = `soundwave-audio-${CACHE_VERSION}`;
-const RUNTIME_CACHE = `soundwave-runtime-${CACHE_VERSION}`;
+const CACHE_NAME = 'soundwave-v2';
+const STATIC_CACHE = 'soundwave-static-v2';
+const DATA_CACHE = 'soundwave-data-v2';
+const AUDIO_CACHE = 'soundwave-audio-v2';
 
-// Critical resources for offline functionality
-const CRITICAL_RESOURCES = [
+// Critical resources needed for offline functionality
+const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
 ];
 
-// Extended resources to cache for better offline experience
-const EXTENDED_RESOURCES = [
-  '/library',
-  '/search',
-];
-
-// Install event - cache critical assets for offline functionality
+// Install event - cache critical assets
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing version', CACHE_VERSION);
+  console.log('[Service Worker] Installing...');
   
   event.waitUntil(
-    Promise.all([
-      // Cache critical resources
-      caches.open(STATIC_CACHE).then((cache) => {
-        console.log('[Service Worker] Caching critical resources');
-        return cache.addAll(CRITICAL_RESOURCES);
-      }),
-      // Pre-cache extended resources for better UX
-      caches.open(RUNTIME_CACHE).then((cache) => {
-        console.log('[Service Worker] Pre-caching extended resources');
-        return Promise.allSettled(
-          EXTENDED_RESOURCES.map(url => 
-            fetch(url).then(response => {
-              if (response.ok) {
-                return cache.put(url, response);
-              }
-            }).catch(err => console.log('Pre-cache failed for:', url))
-          )
-        );
+    caches.open(STATIC_CACHE)
+      .then((cache) => {
+        console.log('[Service Worker] Caching critical assets');
+        return cache.addAll(urlsToCache);
       })
-    ]).then(() => {
-      console.log('[Service Worker] Installation complete');
-      return self.skipWaiting();
-    })
+      .then(() => {
+        // Skip waiting to activate immediately
+        return self.skipWaiting();
+      })
   );
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating version', CACHE_VERSION);
-  
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName.startsWith('soundwave-') && !cacheName.includes(CACHE_VERSION)) {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      console.log('[Service Worker] Activation complete');
-      return self.clients.claim();
-    })
-  );
-});
-
-// Enhanced fetch event with cache-first strategy optimized for audio apps
+// Enhanced fetch event with offline-first strategy
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // Only handle GET requests
-  if (request.method !== 'GET') return;
-  
-  // Handle different types of requests with optimized strategies
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(handleApiRequest(request));
-  }
-  // Handle static assets (JS, CSS, images) - Cache First
-  else if (request.destination === 'script' || 
-           request.destination === 'style' || 
-           request.destination === 'image' ||
-           url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|gif|woff2?|ico)$/)) {
-    event.respondWith(handleStaticAsset(request));
-  }
-  // Handle audio files - Cache First with special handling
-  else if (url.protocol === 'blob:' || 
-           request.destination === 'audio' ||
-           url.pathname.match(/\.(mp3|wav|flac|m4a|aac|ogg|opus|webm)$/)) {
-    event.respondWith(handleAudioRequest(request));
-  }
-  // Handle navigation requests - Network First with cache fallback
-  else if (request.mode === 'navigate' || request.destination === 'document') {
-    event.respondWith(handleNavigationRequest(request));
-  }
-  // Default handling for other requests
-  else {
-    event.respondWith(handleDefaultRequest(request));
+  // Handle different types of requests
+  if (request.method === 'GET') {
+    // Handle API requests
+    if (url.pathname.startsWith('/api/')) {
+      event.respondWith(handleApiRequest(request));
+    }
+    // Handle static assets (JS, CSS, images)
+    else if (request.destination === 'script' || 
+             request.destination === 'style' || 
+             request.destination === 'image' ||
+             url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|gif|woff2?)$/)) {
+      event.respondWith(handleStaticAsset(request));
+    }
+    // Handle audio files and blob URLs
+    else if (url.protocol === 'blob:' || 
+             request.destination === 'audio' ||
+             url.pathname.match(/\.(mp3|wav|flac|m4a|aac|ogg|opus)$/)) {
+      event.respondWith(handleAudioRequest(request));
+    }
+    // Handle navigation requests
+    else if (request.mode === 'navigate' || request.destination === 'document') {
+      event.respondWith(handleNavigationRequest(request));
+    }
+    // Default handling
+    else {
+      event.respondWith(handleDefaultRequest(request));
+    }
+  } else if (request.method === 'POST' || request.method === 'PUT' || request.method === 'DELETE') {
+    // Handle data mutations with background sync
+    event.respondWith(handleDataMutation(request));
   }
 });
 
-// Handle API requests with cache-first strategy for offline resilience
+// Handle API requests with cache-first strategy
 async function handleApiRequest(request) {
-  const url = new URL(request.url);
-  
   try {
-    // Cache-first strategy for API requests
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      console.log('[Service Worker] Serving API from cache:', url.pathname);
-      
-      // Attempt background sync if online
-      if (navigator.onLine) {
-        fetch(request.clone())
-          .then(async (response) => {
-            if (response.ok) {
-              const cache = await caches.open(DATA_CACHE);
-              await cache.put(request, response.clone());
-              console.log('[Service Worker] Background updated cache for:', url.pathname);
-            }
-          })
-          .catch(() => console.log('[Service Worker] Background sync failed for:', url.pathname));
-      }
-      
-      return cachedResponse;
-    }
-    
-    // Network fallback
+    // Try network first for API calls
     const networkResponse = await fetch(request);
     
     if (networkResponse.ok) {
+      // Cache successful responses
       const cache = await caches.open(DATA_CACHE);
-      await cache.put(request, networkResponse.clone());
-      console.log('[Service Worker] Cached new API response:', url.pathname);
+      cache.put(request, networkResponse.clone());
     }
     
     return networkResponse;
   } catch (error) {
-    console.log('[Service Worker] API request failed, checking cache:', url.pathname);
-    
-    // Final cache check
+    // If network fails, try cache
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
+      console.log('[Service Worker] Serving API from cache:', request.url);
       return cachedResponse;
     }
     
-    // Return offline tracks from IndexedDB for /api/tracks
-    if (url.pathname === '/api/tracks') {
-      try {
-        const offlineTracks = await getOfflineTracksFromIDB();
-        return new Response(JSON.stringify(offlineTracks), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      } catch (idbError) {
-        console.log('[Service Worker] Failed to get offline tracks:', idbError);
-      }
+    // Return offline data for tracks endpoint
+    if (request.url.includes('/api/tracks')) {
+      return new Response(
+        JSON.stringify(await getOfflineTracks()),
+        { 
+          headers: { 'Content-Type': 'application/json' },
+          status: 200
+        }
+      );
     }
     
-    // Return appropriate offline response
-    return new Response(JSON.stringify({ 
-      error: 'Offline', 
-      message: 'Content unavailable offline',
-      timestamp: Date.now()
-    }), {
-      status: 503,
-      statusText: 'Service Unavailable',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
+    // Return error response
+    return new Response(
+      JSON.stringify({ error: 'Offline mode - data unavailable' }),
+      { 
+        headers: { 'Content-Type': 'application/json' },
+        status: 503
       }
-    });
+    );
   }
 }
 
@@ -203,9 +131,9 @@ async function handleStaticAsset(request) {
   }
 }
 
-// Handle audio requests with cache-first strategy for offline playback
+// Handle audio requests
 async function handleAudioRequest(request) {
-  // For blob URLs, let them pass through (local files)
+  // For blob URLs, let them pass through
   if (request.url.startsWith('blob:')) {
     return fetch(request);
   }
@@ -214,7 +142,6 @@ async function handleAudioRequest(request) {
   const cachedResponse = await caches.match(request);
   
   if (cachedResponse) {
-    console.log('[Service Worker] Serving audio from cache:', request.url);
     return cachedResponse;
   }
   
@@ -225,25 +152,11 @@ async function handleAudioRequest(request) {
     if (networkResponse.ok && request.url.match(/\.(mp3|wav|flac|m4a|aac|ogg|opus)$/)) {
       const cache = await caches.open(AUDIO_CACHE);
       cache.put(request, networkResponse.clone());
-      console.log('[Service Worker] Cached audio file for offline playback');
     }
     
     return networkResponse;
   } catch (error) {
     console.error('[Service Worker] Failed to fetch audio:', request.url);
-    
-    // Try to get audio blob from IndexedDB as fallback
-    try {
-      const audioBlob = await getAudioBlobFromIDB(request.url);
-      if (audioBlob) {
-        return new Response(audioBlob, {
-          headers: { 'Content-Type': 'audio/mpeg' }
-        });
-      }
-    } catch (idbError) {
-      console.log('[Service Worker] No offline audio available');
-    }
-    
     return new Response('Audio unavailable offline', { status: 503 });
   }
 }
@@ -254,7 +167,7 @@ async function handleNavigationRequest(request) {
     const networkResponse = await fetch(request);
     
     if (networkResponse.ok) {
-      const cache = await caches.open(RUNTIME_CACHE);
+      const cache = await caches.open(STATIC_CACHE);
       cache.put(request, networkResponse.clone());
     }
     
@@ -283,155 +196,69 @@ async function handleDefaultRequest(request) {
   }
 }
 
-// Get offline tracks from IndexedDB
-async function getOfflineTracksFromIDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('SoundWaveDB', 2);
-    
-    request.onerror = () => reject(request.error);
-    
-    request.onsuccess = () => {
-      const db = request.result;
-      
-      if (!db.objectStoreNames.contains('tracks')) {
-        resolve([]);
-        return;
-      }
-      
-      const transaction = db.transaction(['tracks'], 'readonly');
-      const store = transaction.objectStore('tracks');
-      const getAllRequest = store.getAll();
-      
-      getAllRequest.onerror = () => reject(getAllRequest.error);
-      getAllRequest.onsuccess = () => {
-        const tracks = getAllRequest.result || [];
-        console.log('[Service Worker] Retrieved', tracks.length, 'offline tracks from IndexedDB');
-        resolve(tracks);
-      };
-    };
-  });
-}
-
-// Get audio blob from IndexedDB for offline playback
-async function getAudioBlobFromIDB(trackUrl) {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('SoundWaveDB', 2);
-    
-    request.onerror = () => reject(request.error);
-    
-    request.onsuccess = () => {
-      const db = request.result;
-      
-      if (!db.objectStoreNames.contains('audioBlobs')) {
-        resolve(null);
-        return;
-      }
-      
-      const transaction = db.transaction(['audioBlobs'], 'readonly');
-      const store = transaction.objectStore('audioBlobs');
-      
-      // Try to find by track URL or ID
-      const getAllRequest = store.getAll();
-      
-      getAllRequest.onerror = () => reject(getAllRequest.error);
-      getAllRequest.onsuccess = () => {
-        const audioBlobs = getAllRequest.result || [];
-        const matchingBlob = audioBlobs.find(blob => 
-          blob.trackUrl === trackUrl || trackUrl.includes(blob.trackId)
-        );
-        
-        resolve(matchingBlob ? matchingBlob.audioData : null);
-      };
-    };
-  });
-}
-
-// Cache audio blob data for offline playback
-async function cacheAudioBlob(trackId, audioBlob, trackUrl) {
+// Handle data mutations with background sync
+async function handleDataMutation(request) {
   try {
-    const request = indexedDB.open('SoundWaveDB', 2);
-    
-    return new Promise((resolve, reject) => {
-      request.onerror = () => reject(request.error);
-      
-      request.onsuccess = () => {
-        const db = request.result;
-        
-        if (!db.objectStoreNames.contains('audioBlobs')) {
-          resolve(false);
-          return;
-        }
-        
-        const transaction = db.transaction(['audioBlobs'], 'readwrite');
-        const store = transaction.objectStore('audioBlobs');
-        
-        const putRequest = store.put({
-          trackId: trackId,
-          trackUrl: trackUrl,
-          audioData: audioBlob,
-          timestamp: Date.now()
-        });
-        
-        putRequest.onerror = () => reject(putRequest.error);
-        putRequest.onsuccess = () => {
-          console.log('[Service Worker] Cached audio blob for track:', trackId);
-          resolve(true);
-        };
-      };
-    });
+    const response = await fetch(request);
+    return response;
   } catch (error) {
-    console.error('[Service Worker] Failed to cache audio blob:', error);
-    return false;
+    // Queue for background sync when online
+    if ('sync' in self.registration) {
+      const requestData = await request.clone().json();
+      await queueOfflineRequest(request.url, request.method, requestData);
+      
+      await self.registration.sync.register('sync-data');
+      
+      return new Response(
+        JSON.stringify({ 
+          message: 'Request queued for sync',
+          offline: true 
+        }),
+        { 
+          headers: { 'Content-Type': 'application/json' },
+          status: 202
+        }
+      );
+    }
+    
+    return new Response(
+      JSON.stringify({ error: 'Offline - request failed' }),
+      { 
+        headers: { 'Content-Type': 'application/json' },
+        status: 503
+      }
+    );
   }
 }
 
-// Message handler for communication with main thread
-self.addEventListener('message', async (event) => {
-  const { type, data } = event.data;
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  console.log('[Service Worker] Activating...');
   
-  switch (type) {
-    case 'CACHE_AUDIO_BLOB':
-      try {
-        await cacheAudioBlob(data.trackId, data.audioBlob, data.trackUrl);
-        event.ports[0]?.postMessage({ success: true });
-      } catch (error) {
-        event.ports[0]?.postMessage({ success: false, error: error.message });
-      }
-      break;
-      
-    case 'CACHE_ESSENTIAL_RESOURCES':
-      try {
-        const cache = await caches.open(STATIC_CACHE);
-        await cache.addAll(CRITICAL_RESOURCES);
-        console.log('[Service Worker] Essential resources cached');
-        event.ports[0]?.postMessage({ success: true });
-      } catch (error) {
-        console.error('[Service Worker] Failed to cache essential resources:', error);
-        event.ports[0]?.postMessage({ success: false, error: error.message });
-      }
-      break;
-      
-    case 'GET_CACHE_STATUS':
-      try {
-        const cacheNames = await caches.keys();
-        const hasCache = cacheNames.some(name => name.includes('soundwave'));
-        event.ports[0]?.postMessage({ 
-          success: true, 
-          hasCache,
-          cacheNames: cacheNames.filter(name => name.includes('soundwave'))
-        });
-      } catch (error) {
-        event.ports[0]?.postMessage({ success: false, error: error.message });
-      }
-      break;
-  }
+  const cacheWhitelist = [STATIC_CACHE, DATA_CACHE, AUDIO_CACHE];
+  
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (!cacheWhitelist.includes(cacheName)) {
+            console.log('[Service Worker] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+      // Take control of all clients immediately
+      return self.clients.claim();
+    })
+  );
 });
 
-// Background sync for offline data (when supported)
+// Background sync for offline data
 self.addEventListener('sync', (event) => {
   console.log('[Service Worker] Background sync triggered:', event.tag);
   
-  if (event.tag === 'sync-offline-data') {
+  if (event.tag === 'sync-data') {
     event.waitUntil(syncOfflineData());
   }
 });
@@ -439,22 +266,28 @@ self.addEventListener('sync', (event) => {
 // Sync offline data when back online
 async function syncOfflineData() {
   try {
-    console.log('[Service Worker] Syncing offline data...');
-    
-    // Sync cached API responses with server
-    const dataCache = await caches.open(DATA_CACHE);
-    const requests = await dataCache.keys();
+    const db = await openIndexedDB();
+    const tx = db.transaction(['offlineQueue'], 'readonly');
+    const store = tx.objectStore('offlineQueue');
+    const requests = await store.getAll();
     
     for (const request of requests) {
-      if (request.url.includes('/api/')) {
-        try {
-          const response = await fetch(request);
-          if (response.ok) {
-            await dataCache.put(request, response);
-          }
-        } catch (error) {
-          console.log('[Service Worker] Failed to sync:', request.url);
+      try {
+        const response = await fetch(request.url, {
+          method: request.method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(request.data),
+        });
+        
+        if (response.ok) {
+          // Remove from queue
+          const deleteTx = db.transaction(['offlineQueue'], 'readwrite');
+          await deleteTx.objectStore('offlineQueue').delete(request.id);
         }
+      } catch (error) {
+        console.error('[Service Worker] Failed to sync request:', error);
       }
     }
     
@@ -463,3 +296,112 @@ async function syncOfflineData() {
     console.error('[Service Worker] Background sync failed:', error);
   }
 }
+
+// Queue offline requests for later sync
+async function queueOfflineRequest(url, method, data) {
+  try {
+    const db = await openIndexedDB();
+    const tx = db.transaction(['offlineQueue'], 'readwrite');
+    const store = tx.objectStore('offlineQueue');
+    
+    await store.add({
+      id: Date.now() + Math.random(),
+      url,
+      method,
+      data,
+      timestamp: Date.now()
+    });
+    
+    console.log('[Service Worker] Request queued for offline sync');
+  } catch (error) {
+    console.error('[Service Worker] Failed to queue request:', error);
+  }
+}
+
+// Get offline tracks from IndexedDB
+async function getOfflineTracks() {
+  try {
+    const db = await openIndexedDB();
+    const tx = db.transaction(['tracks'], 'readonly');
+    const store = tx.objectStore('tracks');
+    const tracks = await store.getAll();
+    
+    return tracks || [];
+  } catch (error) {
+    console.error('[Service Worker] Failed to get offline tracks:', error);
+    return [];
+  }
+}
+
+// Open IndexedDB
+function openIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('SoundWaveDB', 2);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      
+      // Create object stores if they don't exist
+      if (!db.objectStoreNames.contains('tracks')) {
+        db.createObjectStore('tracks', { keyPath: 'id' });
+      }
+      
+      if (!db.objectStoreNames.contains('audioBlobs')) {
+        db.createObjectStore('audioBlobs', { keyPath: 'trackId' });
+      }
+      
+      if (!db.objectStoreNames.contains('offlineQueue')) {
+        const queueStore = db.createObjectStore('offlineQueue', { keyPath: 'id' });
+        queueStore.createIndex('timestamp', 'timestamp', { unique: false });
+      }
+      
+      if (!db.objectStoreNames.contains('playlists')) {
+        db.createObjectStore('playlists', { keyPath: 'id' });
+      }
+    };
+  });
+}
+
+// Handle push notifications (if needed in the future)
+self.addEventListener('push', (event) => {
+  const options = {
+    body: event.data ? event.data.text() : 'New update available',
+    icon: '/icon-192x192.png',
+    badge: '/icon-192x192.png',
+    vibrate: [100, 50, 100],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: '2'
+    },
+    actions: [
+      {
+        action: 'explore',
+        title: 'Open SoundWave',
+        icon: '/icon-192x192.png'
+      },
+      {
+        action: 'close',
+        title: 'Close',
+        icon: '/icon-192x192.png'
+      }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification('SoundWave', options)
+  );
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'explore') {
+    event.waitUntil(
+      clients.openWindow('/')
+    );
+  }
+});

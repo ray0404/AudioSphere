@@ -67,16 +67,7 @@ export class MemStorage implements IStorage {
 
   async createTrack(insertTrack: InsertTrack): Promise<Track> {
     const id = randomUUID();
-    const track: Track = { 
-      ...insertTrack, 
-      id, 
-      album: insertTrack.album || null,
-      genre: insertTrack.genre || null,
-      duration: insertTrack.duration || null,
-      albumArt: insertTrack.albumArt || null,
-      metadata: insertTrack.metadata || null,
-      createdAt: new Date() 
-    };
+    const track: Track = { ...insertTrack, id, createdAt: new Date() };
     this.tracks.set(id, track);
     return track;
   }
@@ -115,14 +106,7 @@ export class MemStorage implements IStorage {
 
   async createPlaylist(insertPlaylist: InsertPlaylist): Promise<Playlist> {
     const id = randomUUID();
-    const playlist: Playlist = { 
-      ...insertPlaylist, 
-      id, 
-      description: insertPlaylist.description || null,
-      trackIds: insertPlaylist.trackIds || null,
-      isSystem: insertPlaylist.isSystem || null,
-      createdAt: new Date() 
-    };
+    const playlist: Playlist = { ...insertPlaylist, id, createdAt: new Date() };
     this.playlists.set(id, playlist);
     return playlist;
   }

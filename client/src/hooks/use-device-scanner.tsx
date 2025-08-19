@@ -173,8 +173,6 @@ export function useDeviceScanner() {
         localFile: file,
       };
 
-
-
       return track;
     } catch (err) {
       console.error(`Error processing ${file.name}:`, err);
@@ -242,19 +240,16 @@ export function useDeviceScanner() {
           const { fileHandle, localFile, ...trackData } = track;
           
           // Save track metadata to backend
-          console.log('[DeviceScanner] Saving track to backend:', trackData);
           const response = await apiRequest('POST', '/api/tracks', trackData);
           const savedTrack = await response.json();
-          console.log('[DeviceScanner] Track saved successfully:', savedTrack);
           savedTracks.push(savedTrack);
           
           // Store file reference in IndexedDB for offline/persistent access
           if (localFile) {
             try {
-              await offlineStorage.saveAudioBlob(savedTrack.id, localFile, track.fileUrl);
-              console.log(`[DeviceScanner] Cached audio blob for offline playback: ${localFile.name}`);
+              await offlineStorage.saveAudioBlob(savedTrack.id, localFile);
             } catch (err) {
-              console.warn('[DeviceScanner] Failed to save audio for offline use:', err);
+              console.warn('Failed to save audio for offline use:', err);
             }
           }
         } catch (err) {
