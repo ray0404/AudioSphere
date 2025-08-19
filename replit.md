@@ -13,6 +13,18 @@ A cutting-edge progressive web audio player designed for seamless, intelligent m
 
 ## Recent Changes (January 20, 2025)
 
+### Full-Screen Now Playing Implementation ✅
+- **Apple Music-style Now Playing**: Complete full-screen experience with dynamic design
+  - Click track info area in bottom player or swipe up on mobile to open
+  - Dynamic background colors extracted from album artwork 
+  - Smooth animations and transitions for opening/closing
+  - Swipe down to close (prevents browser pull-to-refresh conflict)
+  - Fully functional audio controls: play/pause, next/previous, seeking, volume
+  - Connected shuffle and repeat toggles with visual state indicators
+  - Proper volume slider with real-time audio control
+  - Progress bar scrubbing with actual seek functionality
+  - Responsive design for mobile and desktop
+
 ### Artists & Albums Pages Implementation
 - **Comprehensive Artists Page**: Full hierarchical navigation (Artists → Albums → Songs)
   - Metadata-based artist grouping from ID3 tags
@@ -44,11 +56,13 @@ A cutting-edge progressive web audio player designed for seamless, intelligent m
   - Optimized CSS for smooth scrolling performance
 
 ### Components Added/Updated
+- `now-playing.tsx` component: Full-screen Apple Music-style interface with all functionality
 - `artists.tsx` page: Complete artist browsing with hierarchical navigation
 - `albums.tsx` page: Dedicated album browsing experience
 - `useDeviceScanner` hook: Handles device scanning logic
 - `DeviceScannerDialog` component: UI for device scanning
 - Updated Sidebar with "Scan Device" button
+- Enhanced bottom-player.tsx with click/swipe handlers for Now Playing
 - Cleaned up Library page to focus on main track listing
 
 ## Project Architecture

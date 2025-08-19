@@ -58,7 +58,23 @@ const extractColorsFromImage = async (imageSrc: string): Promise<{ primary: stri
 };
 
 export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
-  const { currentTrack, isPlaying, play, pause, previousTrack, nextTrack, currentTime, duration } = useAudioContext();
+  const { 
+    currentTrack, 
+    isPlaying, 
+    play, 
+    pause, 
+    previousTrack, 
+    nextTrack, 
+    currentTime, 
+    duration,
+    volume,
+    setVolume,
+    seekTo,
+    shuffle,
+    repeat,
+    toggleShuffle,
+    toggleRepeat
+  } = useAudioContext();
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
@@ -93,11 +109,16 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
     const deltaY = e.touches[0].clientY - startY;
     setCurrentY(e.touches[0].clientY);
     
-    if (deltaY > 0 && containerRef.current) {
-      const opacity = Math.max(0.3, 1 - (deltaY / 300));
-      const scale = Math.max(0.9, 1 - (deltaY / 1000));
-      containerRef.current.style.transform = `translateY(${deltaY}px) scale(${scale})`;
-      containerRef.current.style.opacity = opacity.toString();
+    if (deltaY > 0) {
+      // Prevent pull-to-refresh when swiping down
+      e.preventDefault();
+      
+      if (containerRef.current) {
+        const opacity = Math.max(0.3, 1 - (deltaY / 300));
+        const scale = Math.max(0.9, 1 - (deltaY / 1000));
+        containerRef.current.style.transform = `translateY(${deltaY}px) scale(${scale})`;
+        containerRef.current.style.opacity = opacity.toString();
+      }
     }
   };
 
@@ -125,7 +146,9 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
 
   const handleProgressCommit = (values: number[]) => {
     const newTime = (values[0] / 100) * duration;
-    // Note: We would need to implement seeking in the audio context
+    if (seekTo && duration > 0) {
+      seekTo(newTime);
+    }
     setIsDragging(false);
   };
 
@@ -135,7 +158,13 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  console.log('NowPlaying render - isOpen:', isOpen, 'currentTrack:', currentTrack?.title);
+  const handleVolumeChange = (values: number[]) => {
+    if (setVolume) {
+      setVolume(values[0] / 100);
+    }
+  };
+
+
   
   if (!currentTrack) return null;
 
@@ -262,7 +291,11 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:bg-white/10 p-2"
+              onClick={toggleShuffle}
+              className={cn(
+                "text-white hover:bg-white/10 p-2",
+                shuffle && "text-accent"
+              )}
             >
               <Shuffle className="w-5 h-5" />
             </Button>
@@ -270,7 +303,8 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
             <div className="flex items-center space-x-2">
               <Volume2 className="w-5 h-5" />
               <Slider
-                defaultValue={[80]}
+                value={[Math.round((volume || 0.8) * 100)]}
+                onValueChange={handleVolumeChange}
                 max={100}
                 step={1}
                 className="w-24 [&>*]:bg-white/30 [&_[role=slider]]:bg-white [&_[role=slider]]:border-white/50"
@@ -280,7 +314,11 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:bg-white/10 p-2"
+              onClick={toggleRepeat}
+              className={cn(
+                "text-white hover:bg-white/10 p-2",
+                repeat && "text-accent"
+              )}
             >
               <Repeat className="w-5 h-5" />
             </Button>

@@ -11,7 +11,7 @@ export function BottomPlayer() {
   const [startY, setStartY] = useState(0);
   const isMobile = useIsMobile();
   
-  console.log('BottomPlayer render - showNowPlaying:', showNowPlaying);
+
   
   const {
     currentTrack,
@@ -51,7 +51,6 @@ export function BottomPlayer() {
   };
 
   const handleTrackAreaClick = () => {
-    console.log('Track area clicked, isMobile:', isMobile);
     setShowNowPlaying(true);
   };
 
@@ -59,7 +58,6 @@ export function BottomPlayer() {
     e.preventDefault();
     const startY = e.touches[0].clientY;
     setStartY(startY);
-    console.log('Touch start, startY:', startY);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -67,9 +65,7 @@ export function BottomPlayer() {
       e.preventDefault();
       const currentY = e.touches[0].clientY;
       const deltaY = startY - currentY;
-      console.log('Touch move, deltaY:', deltaY, 'currentY:', currentY, 'startY:', startY);
       if (deltaY > 20) { // Reduced threshold for easier swipe
-        console.log('Swipe up detected, opening Now Playing');
         setShowNowPlaying(true);
         setStartY(0);
       }
@@ -304,19 +300,7 @@ export function BottomPlayer() {
       </div>
     </div>
 
-    {/* Debug indicator and test button */}
-    {showNowPlaying && (
-      <div className="fixed top-4 right-4 bg-red-500 text-white px-2 py-1 rounded text-xs z-[9999]">
-        Now Playing State: OPEN
-      </div>
-    )}
-    
-    <button 
-      onClick={() => setShowNowPlaying(true)}
-      className="fixed top-4 left-4 bg-blue-500 text-white px-2 py-1 rounded text-xs z-[9999]"
-    >
-      Test Now Playing
-    </button>
+
 
     <NowPlaying 
       isOpen={showNowPlaying} 
