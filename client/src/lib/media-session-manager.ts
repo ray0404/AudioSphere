@@ -14,6 +14,11 @@ export class MediaSessionManager {
     this.audioElement = new Audio();
     this.audioElement.crossOrigin = 'anonymous';
     this.audioElement.preload = 'metadata';
+    
+    // Add audio element to DOM to ensure it's properly tracked by the browser
+    this.audioElement.style.display = 'none';
+    document.body.appendChild(this.audioElement);
+    
     this.setupAudioElement();
     this.initializeMediaSession();
   }
@@ -40,29 +45,41 @@ export class MediaSessionManager {
     });
 
     this.audioElement.addEventListener('play', () => {
-      if ('mediaSession' in navigator) {
+      if ('mediaSession' in navigator && navigator.mediaSession) {
         navigator.mediaSession.playbackState = 'playing';
+        console.log('Media Session: Set playback state to playing');
       }
     });
 
     this.audioElement.addEventListener('pause', () => {
-      if ('mediaSession' in navigator) {
+      if ('mediaSession' in navigator && navigator.mediaSession) {
         navigator.mediaSession.playbackState = 'paused';
+        console.log('Media Session: Set playback state to paused');
       }
     });
 
     this.audioElement.addEventListener('ended', () => {
-      if ('mediaSession' in navigator) {
+      if ('mediaSession' in navigator && navigator.mediaSession) {
         navigator.mediaSession.playbackState = 'paused';
+        console.log('Media Session: Track ended, set to paused');
       }
     });
   }
 
   private initializeMediaSession() {
-    if (!('mediaSession' in navigator)) {
-      console.warn('MediaSession API not supported');
+    // Check for MediaSession API with more robust detection
+    const hasMediaSession = 'mediaSession' in navigator && 
+                           navigator.mediaSession && 
+                           typeof navigator.mediaSession.setActionHandler === 'function';
+    
+    if (!hasMediaSession) {
+      console.warn('MediaSession API not available - device controls will not be shown');
+      // Still initialize but without media session features
+      this.isInitialized = true;
       return;
     }
+    
+    console.log('MediaSession API detected and initializing...');
 
     // Set up action handlers
     navigator.mediaSession.setActionHandler('play', () => {
@@ -101,8 +118,14 @@ export class MediaSessionManager {
         this.audioElement.load();
       });
 
-      // Update metadata
+      // Update metadata and activate media session
       this.updateMetadata(track);
+      
+      // Force activation of media session (if supported)
+      if ('mediaSession' in navigator && navigator.mediaSession && typeof navigator.mediaSession.setActionHandler === 'function') {
+        navigator.mediaSession.playbackState = 'paused';
+        console.log('Media Session: Track loaded, metadata updated');
+      }
     } catch (error) {
       console.error('Failed to load track:', error);
       throw error;
@@ -110,7 +133,7 @@ export class MediaSessionManager {
   }
 
   private updateMetadata(track: MediaSessionTrack) {
-    if (!('mediaSession' in navigator)) return;
+    if (!('mediaSession' in navigator) || !navigator.mediaSession) return;
 
     const artwork = track.artwork ? [
       { src: track.artwork, sizes: '96x96', type: 'image/jpeg' },
@@ -121,16 +144,21 @@ export class MediaSessionManager {
       { src: track.artwork, sizes: '512x512', type: 'image/jpeg' }
     ] : undefined;
 
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: track.title || 'Unknown Title',
-      artist: track.artist || 'Unknown Artist',
-      album: track.album || 'Unknown Album',
-      artwork
-    });
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title || 'Unknown Title',
+        artist: track.artist || 'Unknown Artist',
+        album: track.album || 'Unknown Album',
+        artwork
+      });
+      console.log('Media Session: Metadata set for', track.title);
+    } catch (error) {
+      console.warn('Failed to set media session metadata:', error);
+    }
   }
 
   private updatePositionState() {
-    if (!('mediaSession' in navigator) || !this.audioElement.duration) return;
+    if (!('mediaSession' in navigator) || !navigator.mediaSession || !this.audioElement.duration) return;
 
     try {
       navigator.mediaSession.setPositionState({
@@ -143,8 +171,20 @@ export class MediaSessionManager {
     }
   }
 
-  play(): Promise<void> {
-    return this.audioElement.play();
+  async play(): Promise<void> {
+    try {
+      // Ensure user interaction has occurred for autoplay policy
+      await this.audioElement.play();
+      
+      // Ensure media session is activated (if supported)
+      if ('mediaSession' in navigator && navigator.mediaSession && typeof navigator.mediaSession.setActionHandler === 'function') {
+        navigator.mediaSession.playbackState = 'playing';
+        console.log('Media Session: Activated and playing');
+      }
+    } catch (error) {
+      console.error('Failed to play audio:', error);
+      throw error;
+    }
   }
 
   pause() {
@@ -188,5 +228,10 @@ export class MediaSessionManager {
     this.audioElement.pause();
     this.audioElement.src = '';
     this.audioElement.load();
+    
+    // Remove from DOM
+    if (this.audioElement.parentNode) {
+      this.audioElement.parentNode.removeChild(this.audioElement);
+    }
   }
 }

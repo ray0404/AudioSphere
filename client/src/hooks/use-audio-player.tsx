@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { MediaSessionManager } from '@/lib/media-session-manager';
+import { MobileAudioManager } from '@/lib/mobile-audio-manager';
 import { formatTime } from '@/lib/audio-utils';
 import { Track } from '@shared/schema';
 
@@ -17,7 +17,7 @@ interface AudioPlayerState {
 }
 
 export function useAudioPlayer() {
-  const mediaSessionRef = useRef<MediaSessionManager | null>(null);
+  const audioManagerRef = useRef<MobileAudioManager | null>(null);
   
   const [state, setState] = useState<AudioPlayerState>({
     currentTrack: null,
@@ -32,67 +32,37 @@ export function useAudioPlayer() {
     currentIndex: -1,
   });
 
-  // Initialize Media Session Manager
+  // Initialize MobileAudioManager
   useEffect(() => {
-    mediaSessionRef.current = new MediaSessionManager();
+    audioManagerRef.current = new MobileAudioManager();
     
     // Set up event listeners
-    mediaSessionRef.current.onTimeUpdate(() => {
-      if (mediaSessionRef.current) {
+    audioManagerRef.current.onTimeUpdate((currentTime) => {
+      if (audioManagerRef.current) {
         setState(prev => ({
           ...prev,
-          currentTime: mediaSessionRef.current!.getCurrentTime(),
-          duration: mediaSessionRef.current!.getDuration(),
-          isPlaying: mediaSessionRef.current!.isPlaying()
+          currentTime,
+          duration: audioManagerRef.current!.getDuration(),
+          isPlaying: audioManagerRef.current!.isPlaying()
         }));
       }
     });
-
-    // nextTrack will be defined later, so we'll set this up in another effect
     
     return () => {
-      mediaSessionRef.current?.destroy();
+      audioManagerRef.current?.destroy();
     };
   }, []);
 
-  // Setup additional Media Session navigation handlers
-  useEffect(() => {
-    if ('mediaSession' in navigator && mediaSessionRef.current) {
-      // Track navigation handlers
-      navigator.mediaSession.setActionHandler('previoustrack', () => {
-        if (state.playlist.length > 0) {
-          let prevIndex = state.currentIndex - 1;
-          if (prevIndex < 0) prevIndex = state.playlist.length - 1;
-          setState(prev => ({ ...prev, currentIndex: prevIndex }));
-          const prevTrack = state.playlist[prevIndex];
-          if (prevTrack) {
-            play(prevTrack);
-          }
-        }
-      });
-      
-      navigator.mediaSession.setActionHandler('nexttrack', () => {
-        if (state.playlist.length > 0) {
-          let nextIndex = state.currentIndex + 1;
-          if (nextIndex >= state.playlist.length) nextIndex = 0;
-          setState(prev => ({ ...prev, currentIndex: nextIndex }));
-          const nextTrack = state.playlist[nextIndex];
-          if (nextTrack) {
-            play(nextTrack);
-          }
-        }
-      });
-    }
-  }, [state.currentTrack, state.playlist, state.currentIndex]);
+  // Navigation handlers are now handled internally by MobileAudioManager
 
   // We'll set up the end handler after nextTrack is defined
 
   const loadTrack = useCallback(async (track: Track) => {
-    if (!mediaSessionRef.current) return;
+    if (!audioManagerRef.current) return;
 
     try {
       console.log('Loading track:', track.title, 'from URL:', track.fileUrl);
-      await mediaSessionRef.current.loadTrack(track.fileUrl, {
+      await audioManagerRef.current.loadTrack(track.fileUrl, {
         title: track.title,
         artist: track.artist,
         album: track.album || 'Unknown Album',
@@ -102,7 +72,7 @@ export function useAudioPlayer() {
         ...prev,
         currentTrack: track,
         currentTime: 0,
-        duration: mediaSessionRef.current?.getDuration() || 0,
+        duration: audioManagerRef.current?.getDuration() || 0,
       }));
     } catch (error) {
       console.error('Failed to load track:', error);
@@ -110,11 +80,11 @@ export function useAudioPlayer() {
   }, []);
 
   const play = useCallback(async (track?: Track) => {
-    if (!mediaSessionRef.current) return;
+    if (!audioManagerRef.current) return;
 
     // Single-track enforcement: always pause current audio first
     if (state.isPlaying) {
-      mediaSessionRef.current.pause();
+      audioManagerRef.current.pause();
       setState(prev => ({ ...prev, isPlaying: false }));
     }
 
@@ -125,7 +95,7 @@ export function useAudioPlayer() {
 
     // Play the current track
     if (state.currentTrack || track) {
-      await mediaSessionRef.current.play();
+      await audioManagerRef.current.play();
       setState(prev => ({ ...prev, isPlaying: true }));
     }
   }, [state.currentTrack, state.isPlaying, loadTrack]);
@@ -133,9 +103,9 @@ export function useAudioPlayer() {
   // Media Session API is now handled by MediaSessionManager
 
   const pause = useCallback(() => {
-    if (!mediaSessionRef.current) return;
+    if (!audioManagerRef.current) return;
     
-    mediaSessionRef.current.pause();
+    audioManagerRef.current.pause();
     setState(prev => ({ ...prev, isPlaying: false }));
   }, []);
 
@@ -148,17 +118,17 @@ export function useAudioPlayer() {
   }, [state.isPlaying, play, pause]);
 
   const seekTo = useCallback((position: number) => {
-    if (!mediaSessionRef.current) return;
+    if (!audioManagerRef.current) return;
     
-    mediaSessionRef.current.seekTo(position);
+    audioManagerRef.current.seekTo(position);
     setState(prev => ({ ...prev, currentTime: position }));
   }, []);
 
   const setVolume = useCallback((volume: number) => {
-    if (!mediaSessionRef.current) return;
+    if (!audioManagerRef.current) return;
     
     const clampedVolume = Math.max(0, Math.min(1, volume));
-    mediaSessionRef.current.setVolume(clampedVolume);
+    audioManagerRef.current.setVolume(clampedVolume);
     setState(prev => ({ 
       ...prev, 
       volume: clampedVolume,
@@ -167,13 +137,13 @@ export function useAudioPlayer() {
   }, []);
 
   const toggleMute = useCallback(() => {
-    if (!mediaSessionRef.current) return;
+    if (!audioManagerRef.current) return;
     
     if (state.isMuted) {
-      mediaSessionRef.current.setVolume(state.volume);
+      audioManagerRef.current.setVolume(state.volume);
       setState(prev => ({ ...prev, isMuted: false }));
     } else {
-      mediaSessionRef.current.setVolume(0);
+      audioManagerRef.current.setVolume(0);
       setState(prev => ({ ...prev, isMuted: true }));
     }
   }, [state.isMuted, state.volume]);
@@ -253,8 +223,8 @@ export function useAudioPlayer() {
 
   // Set up track end handler after nextTrack is defined
   useEffect(() => {
-    if (mediaSessionRef.current) {
-      mediaSessionRef.current.onEnded(() => {
+    if (audioManagerRef.current) {
+      audioManagerRef.current.onEnded(() => {
         nextTrack();
       });
     }
