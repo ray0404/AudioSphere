@@ -114,7 +114,6 @@ export default function Library() {
             <TabsTrigger value="all">All Music</TabsTrigger>
             <TabsTrigger value="recent">Recently Played</TabsTrigger>
             <TabsTrigger value="albums">Albums</TabsTrigger>
-            <TabsTrigger value="artists">Artists</TabsTrigger>
           </TabsList>
           
           <TabsContent value="all">
@@ -201,25 +200,7 @@ export default function Library() {
             </div>
           </TabsContent>
           
-          <TabsContent value="artists">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
-              {Object.values(artists).map((artist) => (
-                <div
-                  key={artist.name}
-                  className="bg-secondary/40 p-3 md:p-4 rounded-lg cursor-pointer hover:bg-secondary/60 transition-colors"
-                  onClick={() => handleTrackPlay(artist.tracks[0])}
-                >
-                  <div className="relative mb-3">
-                    <div className="w-full aspect-square bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-                      <User className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <h4 className="font-medium text-white truncate text-sm">{artist.name || 'Unknown Artist'}</h4>
-                  <p className="text-neutral text-xs">{artist.tracks.length} track{artist.tracks.length !== 1 ? 's' : ''}</p>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
+
         </Tabs>
       </main>
     </div>
