@@ -151,7 +151,7 @@ export default function Home() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-24">
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-24 mobile-optimized">
         {searchQuery ? (
           /* Search Results */
           <section>

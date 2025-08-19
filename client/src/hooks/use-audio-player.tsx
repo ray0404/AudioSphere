@@ -68,6 +68,7 @@ export function useAudioPlayer() {
     if (!audioManagerRef.current) return;
 
     try {
+      console.log('Loading track:', track.title, 'from URL:', track.fileUrl);
       await audioManagerRef.current.loadAudioFile(track.fileUrl);
       setState(prev => ({
         ...prev,

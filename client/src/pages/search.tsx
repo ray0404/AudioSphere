@@ -39,7 +39,7 @@ export default function SearchPage() {
   };
 
   const handleTrackPlay = (track: Track) => {
-    play(track, tracks);
+    play(track);
   };
 
   const clearSearchHistory = () => {
@@ -61,16 +61,16 @@ export default function SearchPage() {
   const trackResults = filteredTracks;
   const artistResults = Array.from(new Set(filteredTracks.map(t => t.artist)))
     .map(artist => ({
-      name: artist,
+      name: artist || 'Unknown Artist',
       tracks: filteredTracks.filter(t => t.artist === artist)
     }));
-  const albumResults = Array.from(new Set(filteredTracks.map(t => `${t.album}-${t.artist}`)))
+  const albumResults = Array.from(new Set(filteredTracks.map(t => `${t.album || 'Unknown Album'}-${t.artist || 'Unknown Artist'}`)))
     .map(albumKey => {
       const [album, artist] = albumKey.split('-');
-      const albumTracks = filteredTracks.filter(t => t.album === album && t.artist === artist);
+      const albumTracks = filteredTracks.filter(t => (t.album || 'Unknown Album') === album && (t.artist || 'Unknown Artist') === artist);
       return {
-        name: album,
-        artist,
+        name: album || 'Unknown Album',
+        artist: artist || 'Unknown Artist',
         albumArt: albumTracks[0]?.albumArt,
         tracks: albumTracks
       };
@@ -103,7 +103,7 @@ export default function SearchPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24">
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 mobile-optimized">
         {!searchQuery ? (
           /* Default Search State */
           <div className="max-w-6xl mx-auto">
@@ -197,7 +197,7 @@ export default function SearchPage() {
                          onClick={() => handleTrackPlay(trackResults[0])}>
                       <img
                         src={trackResults[0].albumArt || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&h=80'}
-                        alt={trackResults[0].album}
+                        alt={trackResults[0].album || 'Album cover'}
                         className="w-20 h-20 rounded object-cover"
                       />
                       <div>
@@ -225,7 +225,7 @@ export default function SearchPage() {
                           </div>
                           <img
                             src={track.albumArt || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40'}
-                            alt={track.album}
+                            alt={track.album || 'Album cover'}
                             className="w-10 h-10 rounded object-cover"
                           />
                           <div className="flex-1 min-w-0">
@@ -275,7 +275,7 @@ export default function SearchPage() {
                           <div className="relative mb-2">
                             <img
                               src={album.albumArt || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200'}
-                              alt={album.name}
+                              alt={album.name || 'Album cover'}
                               className="w-full aspect-square object-cover rounded group-hover:scale-105 transition-transform"
                             />
                           </div>

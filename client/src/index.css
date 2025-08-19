@@ -61,6 +61,7 @@
     @apply bg-background text-foreground font-[family-name:var(--font-inter)] antialiased;
     font-family: var(--font-inter);
     overflow: hidden;
+    touch-action: manipulation;
   }
 
   /* Mobile-first responsive design adjustments */
@@ -114,6 +115,14 @@
   /* Optimize for mobile viewport */
   .mobile-optimized {
     -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  
+  /* Fix scrolling issues */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 }
 

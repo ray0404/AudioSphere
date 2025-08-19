@@ -36,9 +36,33 @@ export class AudioManager {
       if (file instanceof File) {
         arrayBuffer = await file.arrayBuffer();
       } else {
-        // URL string
-        const response = await fetch(file);
-        arrayBuffer = await response.arrayBuffer();
+        // URL string - handle different URL types
+        let fetchUrl = file;
+        
+        // Check if it's a data URL (base64)
+        if (file.startsWith('data:')) {
+          // Convert data URL to blob
+          const response = await fetch(file);
+          const blob = await response.blob();
+          arrayBuffer = await blob.arrayBuffer();
+        } else {
+          // Regular URL
+          const response = await fetch(fetchUrl, {
+            headers: {
+              'Accept': 'audio/*,*/*;q=0.9',
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Failed to fetch audio: ${response.status} ${response.statusText}`);
+          }
+          
+          arrayBuffer = await response.arrayBuffer();
+        }
+      }
+
+      if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+        throw new Error('Invalid or empty audio data');
       }
 
       this.currentBuffer = await this.audioContext!.decodeAudioData(arrayBuffer);

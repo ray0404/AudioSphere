@@ -25,7 +25,7 @@ export default function Library() {
   };
 
   const handleTrackPlay = (track: Track) => {
-    play(track, tracks);
+    play(track);
   };
 
   const filteredTracks = tracks.filter(track =>
@@ -108,7 +108,7 @@ export default function Library() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24">
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 mobile-optimized">
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="all">All Music</TabsTrigger>
@@ -193,8 +193,8 @@ export default function Library() {
                       </button>
                     </div>
                   </div>
-                  <h4 className="font-medium text-white truncate text-sm">{album.name}</h4>
-                  <p className="text-neutral text-xs truncate">{album.artist}</p>
+                  <h4 className="font-medium text-white truncate text-sm">{album.name || 'Unknown Album'}</h4>
+                  <p className="text-neutral text-xs truncate">{album.artist || 'Unknown Artist'}</p>
                   <p className="text-neutral text-xs">{album.tracks.length} track{album.tracks.length !== 1 ? 's' : ''}</p>
                 </div>
               ))}
@@ -214,7 +214,7 @@ export default function Library() {
                       <User className="w-8 h-8 text-white" />
                     </div>
                   </div>
-                  <h4 className="font-medium text-white truncate text-sm">{artist.name}</h4>
+                  <h4 className="font-medium text-white truncate text-sm">{artist.name || 'Unknown Artist'}</h4>
                   <p className="text-neutral text-xs">{artist.tracks.length} track{artist.tracks.length !== 1 ? 's' : ''}</p>
                 </div>
               ))}
