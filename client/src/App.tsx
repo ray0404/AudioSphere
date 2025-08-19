@@ -111,12 +111,12 @@ function App() {
           
           {/* Mobile Sidebar Overlay */}
           {isMobile && showMobileSidebar && (
-            <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="fixed inset-0 z-[60] lg:hidden">
               <div 
                 className="fixed inset-0 bg-black/50" 
                 onClick={() => setShowMobileSidebar(false)}
               />
-              <div className="fixed left-0 top-0 h-full w-64 z-50">
+              <div className="fixed left-0 top-0 h-full w-64 z-[60]">
                 <Sidebar 
                   onUploadClick={() => {
                     handleUploadClick();
