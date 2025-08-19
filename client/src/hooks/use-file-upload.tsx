@@ -115,17 +115,18 @@ export function useFileUpload() {
     }
   }, [toast]);
 
-  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const files = Array.from(event.dataTransfer.files);
-    uploadFiles(files);
+    return await uploadFiles(files);
   }, [uploadFiles]);
 
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files ? Array.from(event.target.files) : [];
-    uploadFiles(files);
+    const result = await uploadFiles(files);
     // Reset input value to allow selecting the same files again
     event.target.value = '';
+    return result;
   }, [uploadFiles]);
 
   return {

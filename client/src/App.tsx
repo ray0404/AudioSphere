@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useState } from "react";
+import { useState, lazy } from "react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import { Sidebar } from "@/components/sidebar";
@@ -20,8 +20,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/search" component={() => <div className="p-6 text-white">Search page coming soon...</div>} />
-      <Route path="/library" component={() => <div className="p-6 text-white">Library page coming soon...</div>} />
+      <Route path="/search" component={lazy(() => import("@/pages/search"))} />
+      <Route path="/library" component={lazy(() => import("@/pages/library"))} />
       <Route path="/recent" component={() => <div className="p-6 text-white">Recently played coming soon...</div>} />
       <Route path="/artists" component={() => <div className="p-6 text-white">Artists page coming soon...</div>} />
       <Route path="/albums" component={() => <div className="p-6 text-white">Albums page coming soon...</div>} />

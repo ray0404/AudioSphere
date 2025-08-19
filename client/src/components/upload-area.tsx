@@ -25,13 +25,17 @@ export function UploadArea({ onUploadComplete, className }: UploadAreaProps) {
     e.preventDefault();
     e.stopPropagation();
     
-    await handleDrop(e);
-    onUploadComplete?.();
+    const tracks = await handleDrop(e);
+    if (tracks && tracks.length > 0) {
+      onUploadComplete?.();
+    }
   };
 
   const onFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    await handleFileSelect(e);
-    onUploadComplete?.();
+    const tracks = await handleFileSelect(e);
+    if (tracks && tracks.length > 0) {
+      onUploadComplete?.();
+    }
   };
 
   return (

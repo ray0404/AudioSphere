@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { queryClient } from '@/lib/queryClient';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,7 +88,10 @@ export default function Home() {
   };
 
   const handleUploadComplete = () => {
-    refetch();
+    // Refresh tracks data after upload
+    queryClient.invalidateQueries({ queryKey: ['/api/tracks'] });
+    // Also refresh the query immediately to show new tracks
+    queryClient.refetchQueries({ queryKey: ['/api/tracks'] });
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
