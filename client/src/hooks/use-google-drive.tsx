@@ -147,7 +147,7 @@ The folder link appears valid but requires API authentication to access programm
         variant: "destructive",
       });
     }
-  }, [toast, GOOGLE_DRIVE_API_KEY]);
+  }, [toast]);
 
   const loadGoogleDriveFiles = useCallback(async () => {
     if (!GOOGLE_DRIVE_API_KEY || !SHARED_FOLDER_ID) {

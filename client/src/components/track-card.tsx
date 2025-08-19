@@ -35,7 +35,7 @@ export function TrackCard({ track, isPlaying, onPlay, className }: TrackCardProp
       <div className="relative mb-3">
         <img
           src={track.albumArt || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200'}
-          alt={track.album}
+          alt={track.album || 'Album cover'}
           className="w-full aspect-square object-cover rounded-lg shadow-lg"
           loading="lazy"
         />
@@ -64,8 +64,8 @@ export function TrackCard({ track, isPlaying, onPlay, className }: TrackCardProp
         <p className="text-neutral text-xs truncate">{track.artist}</p>
         {!isMobile && (
           <div className="flex items-center justify-between text-xs text-neutral">
-            <span className="truncate max-w-[60%]">{track.album}</span>
-            <span>{formatDuration(track.duration)}</span>
+            <span className="truncate max-w-[60%]">{track.album || 'Unknown Album'}</span>
+            <span>{formatDuration(track.duration || 0)}</span>
           </div>
         )}
       </div>
