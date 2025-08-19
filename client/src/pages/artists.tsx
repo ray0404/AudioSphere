@@ -25,7 +25,7 @@ export default function Artists() {
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const isMobile = useIsMobile();
   
-  const { currentTrack, isPlaying, play } = useAudioContext();
+  const { currentTrack, isPlaying, play, playFromList } = useAudioContext();
   
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
     queryKey: ['/api/tracks'],
@@ -87,12 +87,19 @@ export default function Artists() {
   };
 
   const handleTrackPlay = (track: Track) => {
+    if (selectedAlbum) {
+      const trackIndex = selectedAlbum.tracks.findIndex(t => t.id === track.id);
+      if (trackIndex !== -1) {
+        playFromList(selectedAlbum.tracks, trackIndex);
+        return;
+      }
+    }
     play(track);
   };
 
   const handlePlayAlbum = (album: Album) => {
     if (album.tracks.length > 0) {
-      play(album.tracks[0]);
+      playFromList(album.tracks, 0);
     }
   };
 

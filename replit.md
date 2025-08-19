@@ -55,15 +55,25 @@ A cutting-edge progressive web audio player designed for seamless, intelligent m
   - Enhanced touch event handling for better mobile interaction
   - Optimized CSS for smooth scrolling performance
 
+### Contextual Play Queue Implementation ✅
+- **Smart Queue Creation**: When users play a track from any list, creates queue starting from selected track
+  - Library page: Queue from selected track through end of filtered/search results
+  - Artists page: Queue from selected track through rest of album
+  - Albums page: Queue from selected track through rest of album
+  - Automatic playlist management with proper track progression
+  - Seamless integration with existing shuffle and repeat functionality
+
 ### Components Added/Updated
 - `now-playing.tsx` component: Full-screen Apple Music-style interface with all functionality
-- `artists.tsx` page: Complete artist browsing with hierarchical navigation
-- `albums.tsx` page: Dedicated album browsing experience
+- `artists.tsx` page: Complete artist browsing with hierarchical navigation and contextual queues
+- `albums.tsx` page: Dedicated album browsing experience with contextual queues
+- `library.tsx` page: Enhanced with contextual play queue functionality
+- `useAudioPlayer` hook: Added `playFromList` function for contextual queue creation
 - `useDeviceScanner` hook: Handles device scanning logic
 - `DeviceScannerDialog` component: UI for device scanning
 - Updated Sidebar with "Scan Device" button
 - Enhanced bottom-player.tsx with click/swipe handlers for Now Playing
-- Cleaned up Library page to focus on main track listing
+- Fixed persistent button focus states in Now Playing controls
 
 ## Project Architecture
 

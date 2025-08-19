@@ -15,7 +15,7 @@ export default function Library() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const isMobile = useIsMobile();
   
-  const { currentTrack, isPlaying, play, setPlaylist } = useAudioContext();
+  const { currentTrack, isPlaying, play, playFromList, setPlaylist } = useAudioContext();
   
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
     queryKey: ['/api/tracks'],
@@ -26,7 +26,12 @@ export default function Library() {
   };
 
   const handleTrackPlay = (track: Track) => {
-    play(track);
+    const trackIndex = filteredTracks.findIndex(t => t.id === track.id);
+    if (trackIndex !== -1) {
+      playFromList(filteredTracks, trackIndex);
+    } else {
+      play(track);
+    }
   };
 
   const filteredTracks = tracks.filter(track =>

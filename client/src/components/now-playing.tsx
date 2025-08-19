@@ -259,7 +259,9 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
                 previousTrack();
                 e.currentTarget.blur();
               }}
-              className="text-white hover:bg-white/10 active:bg-white/20 p-3 rounded-lg transition-colors focus:outline-none focus:ring-0"
+              className="text-white hover:bg-white/10 p-3 rounded-lg transition-all duration-150 focus:outline-none focus:bg-transparent focus:ring-0 active:scale-95 active:bg-white/20"
+              style={{ outline: 'none', boxShadow: 'none' }}
+              onBlur={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
               <SkipBack className="w-8 h-8" fill="currentColor" />
             </button>
@@ -269,7 +271,9 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
                 isPlaying ? pause() : play(currentTrack);
                 e.currentTarget.blur();
               }}
-              className="text-white hover:bg-white/10 active:bg-white/20 p-4 bg-white/10 rounded-full transition-colors focus:outline-none focus:ring-0"
+              className="text-white hover:bg-white/10 p-4 bg-white/10 rounded-full transition-all duration-150 focus:outline-none focus:bg-white/10 focus:ring-0 active:scale-95 active:bg-white/20"
+              style={{ outline: 'none', boxShadow: 'none' }}
+              onBlur={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'; }}
             >
               {isPlaying ? (
                 <Pause className="w-10 h-10" fill="currentColor" />
@@ -283,7 +287,9 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
                 nextTrack();
                 e.currentTarget.blur();
               }}
-              className="text-white hover:bg-white/10 active:bg-white/20 p-3 rounded-lg transition-colors focus:outline-none focus:ring-0"
+              className="text-white hover:bg-white/10 p-3 rounded-lg transition-all duration-150 focus:outline-none focus:bg-transparent focus:ring-0 active:scale-95 active:bg-white/20"
+              style={{ outline: 'none', boxShadow: 'none' }}
+              onBlur={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
               <SkipForward className="w-8 h-8" fill="currentColor" />
             </button>
@@ -297,9 +303,11 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
                 e.currentTarget.blur();
               }}
               className={cn(
-                "hover:bg-white/10 active:bg-white/20 p-2 rounded-lg transition-colors focus:outline-none focus:ring-0",
+                "hover:bg-white/10 p-2 rounded-lg transition-all duration-150 focus:outline-none focus:bg-transparent focus:ring-0 active:scale-95 active:bg-white/20",
                 shuffle ? "text-accent" : "text-white"
               )}
+              style={{ outline: 'none', boxShadow: 'none' }}
+              onBlur={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
               <Shuffle className="w-5 h-5" />
             </button>
@@ -321,9 +329,11 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
                 e.currentTarget.blur();
               }}
               className={cn(
-                "hover:bg-white/10 active:bg-white/20 p-2 rounded-lg transition-colors focus:outline-none focus:ring-0",
+                "hover:bg-white/10 p-2 rounded-lg transition-all duration-150 focus:outline-none focus:bg-transparent focus:ring-0 active:scale-95 active:bg-white/20",
                 repeat ? "text-accent" : "text-white"
               )}
+              style={{ outline: 'none', boxShadow: 'none' }}
+              onBlur={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
               <Repeat className="w-5 h-5" />
             </button>

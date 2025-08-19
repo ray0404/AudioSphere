@@ -249,6 +249,24 @@ export function useAudioPlayer() {
     }
   }, [nextTrack, previousTrack]);
 
+  // Contextual Play Queue Feature - creates queue starting from selected track
+  const playFromList = useCallback((sourceList: Track[], selectedIndex: number) => {
+    if (selectedIndex < 0 || selectedIndex >= sourceList.length) return;
+    
+    // Create new play queue starting from selected track
+    const newPlayQueue = sourceList.slice(selectedIndex);
+    
+    // Update state with new playlist and start playing the first track
+    setState(prev => ({
+      ...prev,
+      playlist: newPlayQueue,
+      currentIndex: 0
+    }));
+    
+    // Start playing the selected track (now at index 0 of new queue)
+    play(newPlayQueue[0]);
+  }, [play]);
+
   return {
     // State
     currentTrack: state.currentTrack,
@@ -275,6 +293,7 @@ export function useAudioPlayer() {
     toggleShuffle,
     toggleRepeat,
     loadTrack,
+    playFromList,
     
     // Utilities
     getFormattedTime,
