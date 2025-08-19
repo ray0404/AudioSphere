@@ -247,11 +247,35 @@ The folder link appears valid but requires API authentication to access programm
           // Use our proxy endpoint for better authentication handling
           const downloadUrl = `/api/drive-proxy/${driveFile.id}`;
           
-          // For now, use basic metadata since direct download requires more complex auth
+          // Parse metadata from filename
+          const nameWithoutExt = driveFile.name.replace(/\.[^/.]+$/, "");
+          let title = nameWithoutExt;
+          let artist = 'Unknown Artist';
+          let album = 'Unknown Album';
+          
+          // Common filename patterns:
+          // "Artist - Title"
+          if (nameWithoutExt.includes(' - ')) {
+            const parts = nameWithoutExt.split(' - ');
+            if (parts.length === 2) {
+              artist = parts[0].trim();
+              title = parts[1].trim();
+            } else if (parts.length === 3) {
+              // "Artist - Album - Title"
+              artist = parts[0].trim();
+              album = parts[1].trim();
+              title = parts[2].trim();
+            }
+          }
+          // "01. Title" or "01 Title"
+          else if (/^\d{1,2}[\.\s]/.test(nameWithoutExt)) {
+            title = nameWithoutExt.replace(/^\d{1,2}[\.\s]+/, '').trim();
+          }
+          
           trackData = {
-            title: driveFile.name.replace(/\.[^/.]+$/, ""),
-            artist: 'Unknown Artist',
-            album: 'Google Drive Import',
+            title: title,
+            artist: artist,
+            album: album,
             genre: 'Unknown',
             duration: 0,
             fileUrl: downloadUrl, // Use API endpoint instead of uc URL

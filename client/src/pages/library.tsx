@@ -34,32 +34,44 @@ export default function Library() {
     track.album.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Group tracks by different categories
+  // Group tracks by different categories - filter out unknowns for better organization
   const recentlyPlayed = tracks.slice(0, 10);
+  
+  // Group by albums - only show albums with actual names
   const albums = tracks.reduce((acc, track) => {
-    const albumKey = `${track.album}-${track.artist}`;
-    if (!acc[albumKey]) {
-      acc[albumKey] = {
-        name: track.album,
-        artist: track.artist,
-        albumArt: track.albumArt,
-        tracks: []
-      };
+    if (track.album && track.album !== 'Unknown Album' && track.album !== 'Unknown') {
+      const albumKey = `${track.album}-${track.artist}`;
+      if (!acc[albumKey]) {
+        acc[albumKey] = {
+          name: track.album,
+          artist: track.artist,
+          albumArt: track.albumArt,
+          tracks: []
+        };
+      }
+      acc[albumKey].tracks.push(track);
     }
-    acc[albumKey].tracks.push(track);
     return acc;
   }, {} as Record<string, { name: string; artist: string; albumArt?: string; tracks: Track[] }>);
 
+  // Group by artists - only show artists with actual names
   const artists = tracks.reduce((acc, track) => {
-    if (!acc[track.artist]) {
-      acc[track.artist] = {
-        name: track.artist,
-        tracks: []
-      };
+    if (track.artist && track.artist !== 'Unknown Artist' && track.artist !== 'Unknown') {
+      if (!acc[track.artist]) {
+        acc[track.artist] = {
+          name: track.artist,
+          tracks: [],
+          albumArt: null as string | null
+        };
+      }
+      acc[track.artist].tracks.push(track);
+      // Use the first available album art for the artist
+      if (!acc[track.artist].albumArt && track.albumArt) {
+        acc[track.artist].albumArt = track.albumArt;
+      }
     }
-    acc[track.artist].tracks.push(track);
     return acc;
-  }, {} as Record<string, { name: string; tracks: Track[] }>);
+  }, {} as Record<string, { name: string; tracks: Track[]; albumArt: string | null }>);
 
   return (
     <div className="flex-1 flex flex-col">
@@ -174,21 +186,28 @@ export default function Library() {
           </TabsContent>
           
           <TabsContent value="albums">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
-              {Object.values(albums).map((album) => (
+            {Object.keys(albums).length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+                {Object.values(albums).map((album) => (
                 <div
                   key={`${album.name}-${album.artist}`}
-                  className="bg-secondary/40 p-3 md:p-4 rounded-lg cursor-pointer hover:bg-secondary/60 transition-colors"
+                  className="bg-secondary/40 p-3 md:p-4 rounded-lg cursor-pointer hover:bg-secondary/60 transition-colors group"
                   onClick={() => handleTrackPlay(album.tracks[0])}
                 >
-                  <div className="relative mb-3">
-                    <img
-                      src={album.albumArt || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200'}
-                      alt={album.name}
-                      className="w-full aspect-square object-cover rounded-lg shadow-lg"
-                    />
-                    <div className="absolute bottom-2 right-2">
-                      <button className="w-8 h-8 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="relative mb-3 group">
+                    {album.albumArt ? (
+                      <img
+                        src={album.albumArt}
+                        alt={album.name}
+                        className="w-full aspect-square object-cover rounded-lg shadow-lg"
+                      />
+                    ) : (
+                      <div className="w-full aspect-square bg-gradient-to-br from-primary/40 to-accent/40 rounded-lg flex items-center justify-center">
+                        <Disc className="w-12 h-12 text-white/60" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                         <Disc className="w-4 h-4 text-white" />
                       </button>
                     </div>
@@ -199,26 +218,54 @@ export default function Library() {
                 </div>
               ))}
             </div>
+            ) : (
+              <div className="text-center py-12">
+                <Disc className="w-16 h-16 text-neutral mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-white mb-2">No albums found</h3>
+                <p className="text-neutral">Albums will appear here when tracks have album metadata</p>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="artists">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
-              {Object.values(artists).map((artist) => (
+            {Object.keys(artists).length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+                {Object.values(artists).map((artist) => (
                 <div
                   key={artist.name}
-                  className="bg-secondary/40 p-3 md:p-4 rounded-lg cursor-pointer hover:bg-secondary/60 transition-colors"
+                  className="bg-secondary/40 p-3 md:p-4 rounded-lg cursor-pointer hover:bg-secondary/60 transition-colors group"
                   onClick={() => handleTrackPlay(artist.tracks[0])}
                 >
                   <div className="relative mb-3">
-                    <div className="w-full aspect-square bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-                      <User className="w-8 h-8 text-white" />
+                    {artist.albumArt ? (
+                      <img
+                        src={artist.albumArt}
+                        alt={artist.name}
+                        className="w-full aspect-square object-cover rounded-full shadow-lg"
+                      />
+                    ) : (
+                      <div className="w-full aspect-square bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                        <User className="w-8 h-8 text-white" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                        <Music className="w-4 h-4 text-white" />
+                      </button>
                     </div>
                   </div>
                   <h4 className="font-medium text-white truncate text-sm">{artist.name || 'Unknown Artist'}</h4>
                   <p className="text-neutral text-xs">{artist.tracks.length} track{artist.tracks.length !== 1 ? 's' : ''}</p>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <User className="w-16 h-16 text-neutral mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-white mb-2">No artists found</h3>
+                <p className="text-neutral">Artists will appear here when tracks have artist metadata</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </main>

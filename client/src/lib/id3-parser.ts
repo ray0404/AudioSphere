@@ -173,9 +173,17 @@ export class ID3Parser {
       let pos = offset + 1;
       
       // Skip MIME type (null-terminated)
+      let mimeStart = pos;
       while (pos < offset + size && view.getUint8(pos) !== 0) {
         pos++;
       }
+      
+      // Extract MIME type for better detection
+      let mimeType = '';
+      for (let i = mimeStart; i < pos; i++) {
+        mimeType += String.fromCharCode(view.getUint8(i));
+      }
+      
       pos++; // Skip null terminator
       
       if (pos >= offset + size) return null;
@@ -200,12 +208,22 @@ export class ID3Parser {
         imageData[i] = view.getUint8(pos + i);
       }
       
-      // Determine MIME type from first few bytes
-      let mimeType = 'image/jpeg'; // Default
-      if (imageData[0] === 0x89 && imageData[1] === 0x50) {
-        mimeType = 'image/png';
-      } else if (imageData[0] === 0x47 && imageData[1] === 0x49) {
-        mimeType = 'image/gif';
+      // Use extracted MIME type or detect from data
+      if (!mimeType || mimeType === 'image/jpg') {
+        mimeType = 'image/jpeg';
+      }
+      
+      // Fallback: detect from magic bytes
+      if (!mimeType.startsWith('image/')) {
+        if (imageData[0] === 0xFF && imageData[1] === 0xD8) {
+          mimeType = 'image/jpeg';
+        } else if (imageData[0] === 0x89 && imageData[1] === 0x50) {
+          mimeType = 'image/png';
+        } else if (imageData[0] === 0x47 && imageData[1] === 0x49) {
+          mimeType = 'image/gif';
+        } else {
+          mimeType = 'image/jpeg'; // Default fallback
+        }
       }
       
       // Convert to base64 data URL
