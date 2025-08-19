@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { MobileAudioManager } from '@/lib/mobile-audio-manager';
 import { formatTime } from '@/lib/audio-utils';
+import { OfflineStorage } from '@/lib/offline-storage';
 import { Track } from '@shared/schema';
 
 interface AudioPlayerState {
@@ -18,6 +19,7 @@ interface AudioPlayerState {
 
 export function useAudioPlayer() {
   const audioManagerRef = useRef<MobileAudioManager | null>(null);
+  const offlineStorage = new OfflineStorage();
   
   const [state, setState] = useState<AudioPlayerState>({
     currentTrack: null,
@@ -61,15 +63,33 @@ export function useAudioPlayer() {
     if (!audioManagerRef.current) return;
 
     try {
-      console.log('Loading track:', track.title, 'from URL:', track.fileUrl);
+      console.log('[AudioPlayer] Loading track:', track.title, 'from URL:', track.fileUrl);
+      
+      let audioUrl = track.fileUrl;
+      
+      // For uploaded/scanned files (local or device source), try to use cached blob for persistent offline playback
+      if ((track.fileSource === 'local' || track.fileSource === 'device') && track.fileUrl) {
+        // If URL starts with blob: it becomes invalid after closing app
+        if (track.fileUrl.startsWith('blob:')) {
+          try {
+            const blob = await offlineStorage.getAudioBlob(track.id);
+            if (blob) {
+              audioUrl = URL.createObjectURL(blob);
+              console.log('[AudioPlayer] Using cached audio blob for offline playback');
+            }
+          } catch (error) {
+            console.warn('[AudioPlayer] Failed to get cached blob:', error);
+          }
+        }
+      }
       
       // Ensure the URL is valid
-      if (!track.fileUrl || track.fileUrl === '') {
-        console.error('Invalid track URL');
+      if (!audioUrl || audioUrl === '') {
+        console.error('[AudioPlayer] Invalid track URL');
         return;
       }
       
-      await audioManagerRef.current.loadTrack(track.fileUrl, {
+      await audioManagerRef.current.loadTrack(audioUrl, {
         title: track.title,
         artist: track.artist,
         album: track.album || 'Unknown Album',
@@ -83,8 +103,35 @@ export function useAudioPlayer() {
         duration: audioManagerRef.current?.getDuration() || 0,
       }));
     } catch (error) {
-      console.error('Failed to load track:', error);
-      // Show user-friendly error
+      console.error('[AudioPlayer] Failed to load track:', error);
+      
+      // Try fallback with cached blob if available
+      if (track.fileSource === 'local' || track.fileSource === 'device') {
+        try {
+          const blob = await offlineStorage.getAudioBlob(track.id);
+          if (blob) {
+            const fallbackUrl = URL.createObjectURL(blob);
+            await audioManagerRef.current.loadTrack(fallbackUrl, {
+              title: track.title,
+              artist: track.artist,
+              album: track.album || 'Unknown Album',
+              artwork: track.albumArt || undefined
+            });
+            
+            setState(prev => ({
+              ...prev,
+              currentTrack: track,
+              currentTime: 0,
+              duration: audioManagerRef.current?.getDuration() || 0,
+            }));
+            console.log('[AudioPlayer] Successfully loaded from cached blob fallback');
+            return;
+          }
+        } catch (fallbackError) {
+          console.error('[AudioPlayer] Fallback failed:', fallbackError);
+        }
+      }
+      
       setState(prev => ({
         ...prev,
         isPlaying: false
