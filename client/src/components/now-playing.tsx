@@ -254,55 +254,55 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
 
           {/* Controls */}
           <div className="flex items-center justify-center space-x-8 mb-6">
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={previousTrack}
-              className="text-white hover:bg-white/10 focus:bg-white/10 active:bg-white/20 focus:outline-none p-3 transition-colors"
-              onMouseUp={(e) => e.currentTarget.blur()}
+            <button
+              onClick={(e) => {
+                previousTrack();
+                e.currentTarget.blur();
+              }}
+              className="text-white hover:bg-white/10 active:bg-white/20 p-3 rounded-lg transition-colors focus:outline-none focus:ring-0"
             >
               <SkipBack className="w-8 h-8" fill="currentColor" />
-            </Button>
+            </button>
 
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={isPlaying ? pause : () => play(currentTrack)}
-              className="text-white hover:bg-white/10 focus:bg-white/10 active:bg-white/20 focus:outline-none p-4 bg-white/10 rounded-full transition-colors"
-              onMouseUp={(e) => e.currentTarget.blur()}
+            <button
+              onClick={(e) => {
+                isPlaying ? pause() : play(currentTrack);
+                e.currentTarget.blur();
+              }}
+              className="text-white hover:bg-white/10 active:bg-white/20 p-4 bg-white/10 rounded-full transition-colors focus:outline-none focus:ring-0"
             >
               {isPlaying ? (
                 <Pause className="w-10 h-10" fill="currentColor" />
               ) : (
                 <Play className="w-10 h-10 ml-1" fill="currentColor" />
               )}
-            </Button>
+            </button>
 
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={nextTrack}
-              className="text-white hover:bg-white/10 focus:bg-white/10 active:bg-white/20 focus:outline-none p-3 transition-colors"
-              onMouseUp={(e) => e.currentTarget.blur()}
+            <button
+              onClick={(e) => {
+                nextTrack();
+                e.currentTarget.blur();
+              }}
+              className="text-white hover:bg-white/10 active:bg-white/20 p-3 rounded-lg transition-colors focus:outline-none focus:ring-0"
             >
               <SkipForward className="w-8 h-8" fill="currentColor" />
-            </Button>
+            </button>
           </div>
 
           {/* Secondary Controls */}
           <div className="flex items-center justify-between opacity-70">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleShuffle}
+            <button
+              onClick={(e) => {
+                toggleShuffle();
+                e.currentTarget.blur();
+              }}
               className={cn(
-                "text-white hover:bg-white/10 focus:bg-white/10 active:bg-white/20 focus:outline-none p-2 transition-colors",
-                shuffle ? "text-accent hover:text-accent" : "hover:text-white"
+                "hover:bg-white/10 active:bg-white/20 p-2 rounded-lg transition-colors focus:outline-none focus:ring-0",
+                shuffle ? "text-accent" : "text-white"
               )}
-              onMouseUp={(e) => e.currentTarget.blur()}
             >
               <Shuffle className="w-5 h-5" />
-            </Button>
+            </button>
 
             <div className="flex items-center space-x-2">
               <Volume2 className="w-5 h-5" />
@@ -315,18 +315,18 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
               />
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleRepeat}
+            <button
+              onClick={(e) => {
+                toggleRepeat();
+                e.currentTarget.blur();
+              }}
               className={cn(
-                "text-white hover:bg-white/10 focus:bg-white/10 active:bg-white/20 focus:outline-none p-2 transition-colors",
-                repeat ? "text-accent hover:text-accent" : "hover:text-white"
+                "hover:bg-white/10 active:bg-white/20 p-2 rounded-lg transition-colors focus:outline-none focus:ring-0",
+                repeat ? "text-accent" : "text-white"
               )}
-              onMouseUp={(e) => e.currentTarget.blur()}
             >
               <Repeat className="w-5 h-5" />
-            </Button>
+            </button>
           </div>
         </div>
 
