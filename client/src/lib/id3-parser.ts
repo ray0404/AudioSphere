@@ -166,11 +166,55 @@ export class ID3Parser {
     return result.trim();
   }
 
-  private static extractAlbumArt(view: DataView, offset: number, size: number): string {
-    // This is a simplified implementation
-    // In a real implementation, you'd need to properly parse the APIC frame
-    // and extract the image data, then convert it to a data URL
-    return '';
+  private static extractAlbumArt(view: DataView, offset: number, size: number): string | null {
+    try {
+      // Skip encoding byte
+      let pos = offset + 1;
+      
+      // Skip MIME type (null-terminated)
+      while (pos < offset + size && view.getUint8(pos) !== 0) {
+        pos++;
+      }
+      pos++; // Skip null terminator
+      
+      if (pos >= offset + size) return null;
+      
+      // Skip picture type
+      pos++;
+      
+      // Skip description (null-terminated)
+      while (pos < offset + size && view.getUint8(pos) !== 0) {
+        pos++;
+      }
+      pos++; // Skip null terminator
+      
+      if (pos >= offset + size) return null;
+      
+      // Extract image data
+      const imageDataLength = size - (pos - offset);
+      if (imageDataLength <= 0) return null;
+      
+      const imageData = new Uint8Array(imageDataLength);
+      for (let i = 0; i < imageDataLength; i++) {
+        imageData[i] = view.getUint8(pos + i);
+      }
+      
+      // Determine MIME type from first few bytes
+      let mimeType = 'image/jpeg'; // Default
+      if (imageData[0] === 0x89 && imageData[1] === 0x50) {
+        mimeType = 'image/png';
+      } else if (imageData[0] === 0x47 && imageData[1] === 0x49) {
+        mimeType = 'image/gif';
+      }
+      
+      // Convert to base64 data URL
+      const base64 = btoa(String.fromCharCode(...Array.from(imageData)));
+      return `data:${mimeType};base64,${base64}`;
+      
+    } catch (error) {
+      console.error('Failed to extract album art:', error);
+      return null;
+    }
   }
 
   private static getGenreName(index: number): string {

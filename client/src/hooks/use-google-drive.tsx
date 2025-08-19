@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Track } from '@shared/schema';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface GoogleDriveState {
@@ -270,6 +270,9 @@ The folder link appears valid but requires API authentication to access programm
       }
 
       setState(prev => ({ ...prev, isLoading: false }));
+
+      // Invalidate tracks cache to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['/api/tracks'] });
 
       if (importedTracks.length > 0) {
         toast({

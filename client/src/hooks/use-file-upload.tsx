@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { ID3Parser } from '@/lib/id3-parser';
 import { createAudioURL } from '@/lib/audio-utils';
 import { Track } from '@shared/schema';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface UploadState {
@@ -91,6 +91,9 @@ export function useFileUpload() {
       }
 
       setState({ isUploading: false, uploadProgress: 100, error: null });
+      
+      // Invalidate tracks cache to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['/api/tracks'] });
       
       if (uploadedTracks.length > 0) {
         toast({
