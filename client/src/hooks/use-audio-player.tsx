@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { AudioManager, formatTime } from '@/lib/audio-utils';
+import { MediaSessionManager } from '@/lib/media-session-manager';
+import { formatTime } from '@/lib/audio-utils';
 import { Track } from '@shared/schema';
 
 interface AudioPlayerState {
@@ -16,7 +17,7 @@ interface AudioPlayerState {
 }
 
 export function useAudioPlayer() {
-  const audioManagerRef = useRef<AudioManager | null>(null);
+  const mediaSessionRef = useRef<MediaSessionManager | null>(null);
   
   const [state, setState] = useState<AudioPlayerState>({
     currentTrack: null,
@@ -31,33 +32,32 @@ export function useAudioPlayer() {
     currentIndex: -1,
   });
 
-  // Initialize audio manager 
+  // Initialize Media Session Manager
   useEffect(() => {
-    audioManagerRef.current = new AudioManager();
+    mediaSessionRef.current = new MediaSessionManager();
+    
+    // Set up event listeners
+    mediaSessionRef.current.onTimeUpdate(() => {
+      if (mediaSessionRef.current) {
+        setState(prev => ({
+          ...prev,
+          currentTime: mediaSessionRef.current!.getCurrentTime(),
+          duration: mediaSessionRef.current!.getDuration(),
+          isPlaying: mediaSessionRef.current!.isPlaying()
+        }));
+      }
+    });
+
+    // nextTrack will be defined later, so we'll set this up in another effect
     
     return () => {
-      audioManagerRef.current?.destroy();
+      mediaSessionRef.current?.destroy();
     };
   }, []);
 
-  // Setup Media Session API handlers
+  // Setup additional Media Session navigation handlers
   useEffect(() => {
-    if ('mediaSession' in navigator) {
-      // Play/Pause handlers
-      navigator.mediaSession.setActionHandler('play', () => {
-        if (audioManagerRef.current && state.currentTrack) {
-          audioManagerRef.current.play();
-          setState(prev => ({ ...prev, isPlaying: true }));
-        }
-      });
-      
-      navigator.mediaSession.setActionHandler('pause', () => {
-        if (audioManagerRef.current) {
-          audioManagerRef.current.pause();
-          setState(prev => ({ ...prev, isPlaying: false }));
-        }
-      });
-      
+    if ('mediaSession' in navigator && mediaSessionRef.current) {
       // Track navigation handlers
       navigator.mediaSession.setActionHandler('previoustrack', () => {
         if (state.playlist.length > 0) {
@@ -82,72 +82,27 @@ export function useAudioPlayer() {
           }
         }
       });
-
-      // Seek handlers for better mobile experience
-      navigator.mediaSession.setActionHandler('seekto', (details) => {
-        if (details.seekTime && audioManagerRef.current) {
-          audioManagerRef.current.seekTo(details.seekTime);
-          setState(prev => ({ ...prev, currentTime: details.seekTime || 0 }));
-        }
-      });
-
-      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-        const skipTime = details.seekOffset || 10;
-        const newTime = Math.max(state.currentTime - skipTime, 0);
-        if (audioManagerRef.current) {
-          audioManagerRef.current.seekTo(newTime);
-          setState(prev => ({ ...prev, currentTime: newTime }));
-        }
-      });
-
-      navigator.mediaSession.setActionHandler('seekforward', (details) => {
-        const skipTime = details.seekOffset || 10;
-        const newTime = Math.min(state.currentTime + skipTime, state.duration);
-        if (audioManagerRef.current) {
-          audioManagerRef.current.seekTo(newTime);
-          setState(prev => ({ ...prev, currentTime: newTime }));
-        }
-      });
     }
   }, [state.currentTrack, state.playlist, state.currentIndex]);
 
-  // Update progress
-  useEffect(() => {
-    if (!state.isPlaying) return;
-
-    const interval = setInterval(() => {
-      if (audioManagerRef.current) {
-        const playbackState = audioManagerRef.current.getPlaybackState();
-        setState(prev => ({
-          ...prev,
-          currentTime: playbackState.currentTime,
-          duration: playbackState.duration,
-          isPlaying: playbackState.isPlaying,
-        }));
-
-        // Auto-advance to next track if current track ends
-        if (playbackState.currentTime >= playbackState.duration && playbackState.duration > 0) {
-          nextTrack();
-        }
-        
-        // Media session position will be updated by effect
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [state.isPlaying]);
+  // We'll set up the end handler after nextTrack is defined
 
   const loadTrack = useCallback(async (track: Track) => {
-    if (!audioManagerRef.current) return;
+    if (!mediaSessionRef.current) return;
 
     try {
       console.log('Loading track:', track.title, 'from URL:', track.fileUrl);
-      await audioManagerRef.current.loadAudioFile(track.fileUrl);
+      await mediaSessionRef.current.loadTrack(track.fileUrl, {
+        title: track.title,
+        artist: track.artist,
+        album: track.album || 'Unknown Album',
+        artwork: track.albumArt || undefined
+      });
       setState(prev => ({
         ...prev,
         currentTrack: track,
         currentTime: 0,
-        duration: audioManagerRef.current?.getDuration() || 0,
+        duration: mediaSessionRef.current?.getDuration() || 0,
       }));
     } catch (error) {
       console.error('Failed to load track:', error);
@@ -155,11 +110,11 @@ export function useAudioPlayer() {
   }, []);
 
   const play = useCallback(async (track?: Track) => {
-    if (!audioManagerRef.current) return;
+    if (!mediaSessionRef.current) return;
 
     // Single-track enforcement: always pause current audio first
     if (state.isPlaying) {
-      audioManagerRef.current.pause();
+      mediaSessionRef.current.pause();
       setState(prev => ({ ...prev, isPlaying: false }));
     }
 
@@ -170,48 +125,17 @@ export function useAudioPlayer() {
 
     // Play the current track
     if (state.currentTrack || track) {
-      audioManagerRef.current.play(0); // Always start from beginning for new tracks
+      await mediaSessionRef.current.play();
       setState(prev => ({ ...prev, isPlaying: true }));
-      // Media session will be updated in the effect
     }
   }, [state.currentTrack, state.isPlaying, loadTrack]);
 
-  // Separate effect to update Media Session API
-  useEffect(() => {
-    if ('mediaSession' in navigator && state.currentTrack) {
-      // Update metadata for notification/lock screen display
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: state.currentTrack.title || 'Unknown Title',
-        artist: state.currentTrack.artist || 'Unknown Artist',
-        album: state.currentTrack.album || 'Unknown Album',
-        artwork: state.currentTrack.albumArt ? [
-          { src: state.currentTrack.albumArt, sizes: '96x96', type: 'image/jpeg' },
-          { src: state.currentTrack.albumArt, sizes: '128x128', type: 'image/jpeg' },
-          { src: state.currentTrack.albumArt, sizes: '192x192', type: 'image/jpeg' },
-          { src: state.currentTrack.albumArt, sizes: '256x256', type: 'image/jpeg' },
-          { src: state.currentTrack.albumArt, sizes: '384x384', type: 'image/jpeg' },
-          { src: state.currentTrack.albumArt, sizes: '512x512', type: 'image/jpeg' }
-        ] : undefined
-      });
-      
-      // Update playback state
-      navigator.mediaSession.playbackState = state.isPlaying ? 'playing' : 'paused';
-      
-      // Set position state for seeking controls
-      if (state.duration > 0) {
-        navigator.mediaSession.setPositionState({
-          duration: state.duration,
-          playbackRate: 1.0,
-          position: state.currentTime
-        });
-      }
-    }
-  }, [state.currentTrack, state.isPlaying, state.currentTime, state.duration]);
+  // Media Session API is now handled by MediaSessionManager
 
   const pause = useCallback(() => {
-    if (!audioManagerRef.current) return;
+    if (!mediaSessionRef.current) return;
     
-    audioManagerRef.current.pause();
+    mediaSessionRef.current.pause();
     setState(prev => ({ ...prev, isPlaying: false }));
   }, []);
 
@@ -224,17 +148,17 @@ export function useAudioPlayer() {
   }, [state.isPlaying, play, pause]);
 
   const seekTo = useCallback((position: number) => {
-    if (!audioManagerRef.current) return;
+    if (!mediaSessionRef.current) return;
     
-    audioManagerRef.current.seekTo(position);
+    mediaSessionRef.current.seekTo(position);
     setState(prev => ({ ...prev, currentTime: position }));
   }, []);
 
   const setVolume = useCallback((volume: number) => {
-    if (!audioManagerRef.current) return;
+    if (!mediaSessionRef.current) return;
     
     const clampedVolume = Math.max(0, Math.min(1, volume));
-    audioManagerRef.current.setVolume(clampedVolume);
+    mediaSessionRef.current.setVolume(clampedVolume);
     setState(prev => ({ 
       ...prev, 
       volume: clampedVolume,
@@ -243,13 +167,13 @@ export function useAudioPlayer() {
   }, []);
 
   const toggleMute = useCallback(() => {
-    if (!audioManagerRef.current) return;
+    if (!mediaSessionRef.current) return;
     
     if (state.isMuted) {
-      audioManagerRef.current.setVolume(state.volume);
+      mediaSessionRef.current.setVolume(state.volume);
       setState(prev => ({ ...prev, isMuted: false }));
     } else {
-      audioManagerRef.current.setVolume(0);
+      mediaSessionRef.current.setVolume(0);
       setState(prev => ({ ...prev, isMuted: true }));
     }
   }, [state.isMuted, state.volume]);
@@ -326,6 +250,15 @@ export function useAudioPlayer() {
     if (state.duration === 0) return 0;
     return (state.currentTime / state.duration) * 100;
   }, [state.currentTime, state.duration]);
+
+  // Set up track end handler after nextTrack is defined
+  useEffect(() => {
+    if (mediaSessionRef.current) {
+      mediaSessionRef.current.onEnded(() => {
+        nextTrack();
+      });
+    }
+  }, [nextTrack]);
 
   return {
     // State
