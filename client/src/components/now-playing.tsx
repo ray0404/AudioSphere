@@ -224,7 +224,7 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
         </div>
 
         {/* Track Info */}
-        <div className="px-8 md:px-16 mb-6">
+        <div className="px-8 md:px-16 mb-4">
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl font-bold mb-2 truncate">
               {currentTrack.title}
@@ -247,18 +247,18 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
           </div>
 
           {/* Time Display */}
-          <div className="flex justify-between text-sm opacity-70 mb-8">
+          <div className="flex justify-between text-sm opacity-70 mb-6">
             <span>{formatTime(currentTime)}</span>
             <span>-{formatTime(duration - currentTime)}</span>
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-center space-x-8 mb-8">
+          <div className="flex items-center justify-center space-x-8 mb-6">
             <button
               tabIndex={-1}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 previousTrack();
-                e.preventDefault();
+                e.currentTarget.blur();
               }}
               className="text-white hover:bg-white/10 p-3 rounded-lg transition-colors [&:focus]:outline-none [&:focus]:ring-0 [&:focus]:bg-transparent"
               style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -268,9 +268,9 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
 
             <button
               tabIndex={-1}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 isPlaying ? pause() : play(currentTrack);
-                e.preventDefault();
+                e.currentTarget.blur();
               }}
               className="text-white hover:bg-white/10 p-4 bg-white/10 rounded-full transition-colors [&:focus]:outline-none [&:focus]:ring-0 [&:focus]:bg-white/10"
               style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -284,9 +284,9 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
 
             <button
               tabIndex={-1}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 nextTrack();
-                e.preventDefault();
+                e.currentTarget.blur();
               }}
               className="text-white hover:bg-white/10 p-3 rounded-lg transition-colors [&:focus]:outline-none [&:focus]:ring-0 [&:focus]:bg-transparent"
               style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -299,9 +299,9 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
           <div className="flex items-center justify-between opacity-70">
             <button
               tabIndex={-1}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 toggleShuffle();
-                e.preventDefault();
+                e.currentTarget.blur();
               }}
               className={cn(
                 "hover:bg-white/10 p-2 rounded-lg transition-colors [&:focus]:outline-none [&:focus]:ring-0 [&:focus]:bg-transparent",
@@ -325,9 +325,9 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
 
             <button
               tabIndex={-1}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 toggleRepeat();
-                e.preventDefault();
+                e.currentTarget.blur();
               }}
               className={cn(
                 "hover:bg-white/10 p-2 rounded-lg transition-colors [&:focus]:outline-none [&:focus]:ring-0 [&:focus]:bg-transparent",
@@ -341,7 +341,7 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
         </div>
 
         {/* Safe area for mobile */}
-        <div className="h-12 md:h-8" />
+        <div className="h-6 md:h-4" />
       </div>
     </div>
   );
