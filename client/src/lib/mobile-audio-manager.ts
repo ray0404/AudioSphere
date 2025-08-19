@@ -21,8 +21,7 @@ export class MobileAudioManager {
 
   private setupAudioElement() {
     // Configure audio element for maximum compatibility
-    this.audioElement.crossOrigin = 'anonymous';
-    this.audioElement.preload = 'metadata';
+    this.audioElement.preload = 'auto';
     this.audioElement.controls = false;
     
     // Add to DOM but keep hidden - critical for mobile recognition
@@ -37,6 +36,7 @@ export class MobileAudioManager {
     
     // Essential for mobile device recognition
     this.audioElement.setAttribute('data-player', 'soundwave');
+    this.audioElement.setAttribute('playsinline', 'true');
     
     document.body.appendChild(this.audioElement);
 
@@ -208,28 +208,36 @@ export class MobileAudioManager {
 
   // Public API
   async loadTrack(url: string, metadata: AudioMetadata): Promise<void> {
-    console.log('Loading track:', metadata.title);
+    console.log('Loading track:', metadata.title, 'from URL:', url);
     
     this.currentMetadata = metadata;
-    this.audioElement.src = url;
     
     return new Promise((resolve, reject) => {
       const onLoad = () => {
-        this.audioElement.removeEventListener('loadeddata', onLoad);
+        this.audioElement.removeEventListener('loadedmetadata', onLoad);
+        this.audioElement.removeEventListener('canplay', onLoad);
         this.audioElement.removeEventListener('error', onError);
         this.updateMediaSessionMetadata();
         this.activateMediaSession();
+        console.log('Audio loaded successfully');
         resolve();
       };
       
-      const onError = () => {
-        this.audioElement.removeEventListener('loadeddata', onLoad);
+      const onError = (e: Event) => {
+        this.audioElement.removeEventListener('loadedmetadata', onLoad);
+        this.audioElement.removeEventListener('canplay', onLoad);
         this.audioElement.removeEventListener('error', onError);
+        console.error('Audio load error:', e);
         reject(new Error('Failed to load audio'));
       };
       
-      this.audioElement.addEventListener('loadeddata', onLoad);
+      // Listen for either loadedmetadata or canplay event
+      this.audioElement.addEventListener('loadedmetadata', onLoad);
+      this.audioElement.addEventListener('canplay', onLoad);
       this.audioElement.addEventListener('error', onError);
+      
+      // Set source and load
+      this.audioElement.src = url;
       this.audioElement.load();
     });
   }

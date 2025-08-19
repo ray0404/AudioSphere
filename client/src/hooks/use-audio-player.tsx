@@ -62,12 +62,20 @@ export function useAudioPlayer() {
 
     try {
       console.log('Loading track:', track.title, 'from URL:', track.fileUrl);
+      
+      // Ensure the URL is valid
+      if (!track.fileUrl || track.fileUrl === '') {
+        console.error('Invalid track URL');
+        return;
+      }
+      
       await audioManagerRef.current.loadTrack(track.fileUrl, {
         title: track.title,
         artist: track.artist,
         album: track.album || 'Unknown Album',
         artwork: track.albumArt || undefined
       });
+      
       setState(prev => ({
         ...prev,
         currentTrack: track,
@@ -76,6 +84,11 @@ export function useAudioPlayer() {
       }));
     } catch (error) {
       console.error('Failed to load track:', error);
+      // Show user-friendly error
+      setState(prev => ({
+        ...prev,
+        isPlaying: false
+      }));
     }
   }, []);
 

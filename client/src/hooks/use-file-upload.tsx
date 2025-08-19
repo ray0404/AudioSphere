@@ -53,8 +53,13 @@ export function useFileUpload() {
           const tags = await ID3Parser.parseFile(file);
           const duration = await ID3Parser.getDuration(file);
           
-          // Create audio URL
-          const fileUrl = createAudioURL(file);
+          // Convert file to base64 data URL for storage
+          const reader = new FileReader();
+          const fileDataUrl = await new Promise<string>((resolve, reject) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
           
           // Prepare track data
           const trackData = {
@@ -63,7 +68,7 @@ export function useFileUpload() {
             album: tags.album || 'Unknown Album',
             genre: tags.genre || 'Unknown',
             duration: Math.round(duration),
-            fileUrl,
+            fileUrl: fileDataUrl,
             fileSource: 'local' as const,
             albumArt: tags.albumArt || null,
             metadata: {
