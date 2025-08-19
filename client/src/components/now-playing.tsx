@@ -258,7 +258,8 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
               variant="ghost"
               size="lg"
               onClick={previousTrack}
-              className="text-white hover:bg-white/10 p-3"
+              className="text-white hover:bg-white/10 focus:bg-white/10 active:bg-white/20 focus:outline-none p-3 transition-colors"
+              onMouseUp={(e) => e.currentTarget.blur()}
             >
               <SkipBack className="w-8 h-8" fill="currentColor" />
             </Button>
@@ -267,7 +268,8 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
               variant="ghost"
               size="lg"
               onClick={isPlaying ? pause : () => play(currentTrack)}
-              className="text-white hover:bg-white/10 p-4 bg-white/10 rounded-full"
+              className="text-white hover:bg-white/10 focus:bg-white/10 active:bg-white/20 focus:outline-none p-4 bg-white/10 rounded-full transition-colors"
+              onMouseUp={(e) => e.currentTarget.blur()}
             >
               {isPlaying ? (
                 <Pause className="w-10 h-10" fill="currentColor" />
@@ -280,7 +282,8 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
               variant="ghost"
               size="lg"
               onClick={nextTrack}
-              className="text-white hover:bg-white/10 p-3"
+              className="text-white hover:bg-white/10 focus:bg-white/10 active:bg-white/20 focus:outline-none p-3 transition-colors"
+              onMouseUp={(e) => e.currentTarget.blur()}
             >
               <SkipForward className="w-8 h-8" fill="currentColor" />
             </Button>
@@ -293,9 +296,10 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
               size="sm"
               onClick={toggleShuffle}
               className={cn(
-                "text-white hover:bg-white/10 p-2",
-                shuffle && "text-accent"
+                "text-white hover:bg-white/10 focus:bg-white/10 active:bg-white/20 focus:outline-none p-2 transition-colors",
+                shuffle ? "text-accent hover:text-accent" : "hover:text-white"
               )}
+              onMouseUp={(e) => e.currentTarget.blur()}
             >
               <Shuffle className="w-5 h-5" />
             </Button>
@@ -316,9 +320,10 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
               size="sm"
               onClick={toggleRepeat}
               className={cn(
-                "text-white hover:bg-white/10 p-2",
-                repeat && "text-accent"
+                "text-white hover:bg-white/10 focus:bg-white/10 active:bg-white/20 focus:outline-none p-2 transition-colors",
+                repeat ? "text-accent hover:text-accent" : "hover:text-white"
               )}
+              onMouseUp={(e) => e.currentTarget.blur()}
             >
               <Repeat className="w-5 h-5" />
             </Button>
