@@ -31,7 +31,7 @@ export default function Library() {
   const filteredTracks = tracks.filter(track =>
     track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     track.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    track.album.toLowerCase().includes(searchQuery.toLowerCase())
+    (track.album || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Group tracks by different categories
@@ -40,9 +40,9 @@ export default function Library() {
     const albumKey = `${track.album}-${track.artist}`;
     if (!acc[albumKey]) {
       acc[albumKey] = {
-        name: track.album,
+        name: track.album || 'Unknown Album',
         artist: track.artist,
-        albumArt: track.albumArt,
+        albumArt: track.albumArt || undefined,
         tracks: []
       };
     }

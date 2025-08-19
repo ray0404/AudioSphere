@@ -60,9 +60,9 @@
   body {
     @apply bg-background text-foreground font-[family-name:var(--font-inter)] antialiased;
     font-family: var(--font-inter);
-    overflow: hidden;
-    touch-action: manipulation;
-    overscroll-behavior: none;
+    overflow: visible;
+    touch-action: auto;
+    overscroll-behavior: auto;
   }
 
   /* Mobile-first responsive design adjustments */
@@ -111,37 +111,44 @@
   /* Better scroll performance on mobile */
   .track-card {
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   
   /* Optimize for mobile viewport */
   .mobile-optimized {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
+    scroll-behavior: smooth;
   }
   
   /* Fix scrolling issues */
   .overflow-y-auto {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
     scroll-behavior: smooth;
   }
   
   /* Root container fixes */
   #root {
     height: 100vh;
-    overflow: hidden;
-    position: fixed;
+    overflow: visible;
+    position: relative;
     width: 100%;
-    top: 0;
-    left: 0;
   }
   
   /* Fix for mobile webkit scrolling */
   .scrollable-content {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
     scroll-behavior: smooth;
+  }
+  
+  /* Ensure body and html allow natural scrolling */
+  body, html {
+    overflow: visible !important;
+    touch-action: auto !important;
+    overscroll-behavior: auto !important;
   }
 }
 

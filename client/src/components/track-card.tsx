@@ -13,7 +13,11 @@ interface TrackCardProps {
 export function TrackCard({ track, isPlaying, onPlay, className }: TrackCardProps) {
   const isMobile = useIsMobile();
   
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent scroll interference on mobile
+    if (isMobile && e.type === 'touchend') {
+      e.preventDefault();
+    }
     onPlay(track);
   };
 
@@ -31,6 +35,11 @@ export function TrackCard({ track, isPlaying, onPlay, className }: TrackCardProp
         className
       )}
       onClick={handleClick}
+      onTouchEnd={isMobile ? handleClick : undefined}
+      style={{
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent'
+      }}
     >
       <div className="relative mb-3">
         <img
@@ -47,7 +56,7 @@ export function TrackCard({ track, isPlaying, onPlay, className }: TrackCardProp
             )}
             onClick={(e) => {
               e.stopPropagation();
-              handleClick();
+              handleClick(e);
             }}
           >
             {isPlaying ? (
