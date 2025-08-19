@@ -42,10 +42,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/tracks", async (req, res) => {
     try {
+      console.log('[API] Creating track with data:', req.body);
       const validatedTrack = insertTrackSchema.parse(req.body);
+      console.log('[API] Validated track data:', validatedTrack);
       const track = await storage.createTrack(validatedTrack);
+      console.log('[API] Track created successfully:', track);
       res.status(201).json(track);
     } catch (error) {
+      console.error('[API] Error creating track:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid track data", errors: error.errors });
       }

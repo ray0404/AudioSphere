@@ -242,8 +242,10 @@ export function useDeviceScanner() {
           const { fileHandle, localFile, ...trackData } = track;
           
           // Save track metadata to backend
+          console.log('[DeviceScanner] Saving track to backend:', trackData);
           const response = await apiRequest('POST', '/api/tracks', trackData);
           const savedTrack = await response.json();
+          console.log('[DeviceScanner] Track saved successfully:', savedTrack);
           savedTracks.push(savedTrack);
           
           // Store file reference in IndexedDB for offline/persistent access
