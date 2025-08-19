@@ -37,6 +37,30 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve PWA files with correct content types
+app.use('/manifest.json', express.static('client/public/manifest.json', {
+  setHeaders: (res) => {
+    res.set('Content-Type', 'application/manifest+json');
+  }
+}));
+
+app.use('/sw.js', express.static('client/public/sw.js', {
+  setHeaders: (res) => {
+    res.set('Content-Type', 'application/javascript');
+    res.set('Service-Worker-Allowed', '/');
+  }
+}));
+
+app.use('/pwa-debug.js', express.static('client/public/pwa-debug.js', {
+  setHeaders: (res) => {
+    res.set('Content-Type', 'application/javascript');
+  }
+}));
+
+// Serve icon files
+app.use('/icon-192.png', express.static('client/public/icon-192.png'));
+app.use('/icon-512.png', express.static('client/public/icon-512.png'));
+
 (async () => {
   const server = await registerRoutes(app);
 
