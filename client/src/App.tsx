@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Menu } from "lucide-react";
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 function Router() {
@@ -281,6 +282,7 @@ function App() {
         </Dialog>
 
           <Toaster />
+          <PWAInstallPrompt />
         </TooltipProvider>
       </AudioProvider>
     </QueryClientProvider>
