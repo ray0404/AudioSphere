@@ -1,69 +1,91 @@
-# Overview
+# SoundWave - Progressive Web Audio Player
 
-SoundWave is a fully functional progressive web application (PWA) music player built with React and Express. The application supports both local file uploads and Google Drive integration, allowing users to manage and play their music collection from multiple sources. It features a modern Spotify-inspired dark-themed interface with comprehensive audio playback controls, playlist management, search functionality, and offline capabilities through service worker implementation.
+## Overview
+A cutting-edge progressive web audio player designed for seamless, intelligent music management across devices with advanced playback and discovery features.
 
-## Recent Changes (August 2025)
-- ✅ Complete PWA implementation with install prompt and offline support
-- ✅ Local file upload with comprehensive ID3 tag parsing (MP3, FLAC, WAV, M4A, AAC)
-- ✅ Google Drive integration for accessing shared music folders with API authentication
-- ✅ Spotify-inspired dark UI with custom color scheme (#9C4F2C primary, #121212 background, #ffbc12 accent)
-- ✅ Advanced audio player with Web Audio API integration
-- ✅ Full player controls: play/pause, seek, volume, shuffle, repeat, next/previous
-- ✅ Sidebar navigation with library organization
-- ✅ Real-time search across all tracks
-- ✅ Service worker for offline caching and background sync
-- ✅ Web app manifest for installability on devices
-- ✅ Mobile-optimized interface with hamburger menu and responsive design
-- ✅ Complete Library page with albums, artists, and categorized views
-- ✅ Complete Search page with search history and advanced filtering
-- ✅ Fixed audio loading issues and improved error handling
-- ✅ Optimized scrolling performance for mobile devices
-- ✅ Single-track playback enforcement (only one track plays at a time)
-- ✅ Persistent bottom media player bar across all pages
-- ✅ **Full Media Session API integration with mobile device controls (lock screen, notification bar)**
-- ✅ Enhanced MobileAudioManager for reliable cross-browser media control support
-- ✅ Navigation callbacks for previous/next track from device controls
-- ✅ Google Drive proxy endpoint for secure authenticated streaming
-- ✅ Enhanced playback persistence across page switches and app backgrounding
+### Key Features
+- **Device Scanning**: Scan local device folders and files for audio without uploading
+- **PWA Support**: Works offline with service workers
+- **Media Session API**: Integrates with system media controls
+- **IndexedDB Storage**: Local storage for offline playback
+- **ID3 Tag Parsing**: Automatic metadata extraction
+- **Multiple Sources**: Support for local files, device scanning, and Google Drive
 
-# User Preferences
+## Recent Changes (January 20, 2025)
 
-Preferred communication style: Simple, everyday language.
+### Device Scanning Feature Added
+- **New Device Scanner**: Users can now scan their device for audio files
+  - Folder scanning using File System Access API (desktop browsers)
+  - Individual file selection (all browsers)
+  - Quick scan for common music locations
+  - Files are played directly from device without uploading
+  - Automatic ID3 tag parsing for metadata
+  - Support for MP3, WAV, FLAC, M4A, AAC, OGG, OPUS, WMA, ALAC, AIFF, APE, WEBM formats
 
-# System Architecture
+### Components Added
+- `useDeviceScanner` hook: Handles device scanning logic
+- `DeviceScannerDialog` component: UI for device scanning
+- Updated Sidebar with "Scan Device" button
 
-## Frontend Architecture
-- **Framework**: React with TypeScript using Vite for build tooling
-- **UI Components**: Radix UI primitives with shadcn/ui component system for consistent design
-- **Styling**: Tailwind CSS with CSS custom properties for theming
-- **State Management**: TanStack Query for server state management and React hooks for local state
-- **Routing**: Wouter for lightweight client-side routing
-- **Audio Processing**: Custom AudioManager class using Web Audio API for advanced audio control
-- **PWA Features**: Service worker for offline caching, web app manifest for installability
+## Project Architecture
 
-## Backend Architecture
-- **Framework**: Express.js with TypeScript
-- **API Design**: RESTful endpoints for tracks, playlists, and user preferences
-- **Development Server**: Vite integration for hot module replacement in development
-- **File Processing**: Custom ID3 parser for extracting metadata from audio files
-- **Storage Interface**: Abstract storage layer with in-memory implementation (easily extensible to database)
+### Technology Stack
+- **Frontend**: TypeScript, React, Vite
+- **Backend**: Express.js, Node.js
+- **Database**: PostgreSQL (via Drizzle ORM)
+- **Storage**: IndexedDB for offline audio storage
+- **PWA**: Service Workers for offline functionality
+- **UI**: Tailwind CSS, shadcn/ui components
 
-## Data Storage Solutions
-- **Database**: PostgreSQL configured through Drizzle ORM
-- **Schema Management**: Drizzle Kit for migrations and schema management
-- **Connection**: Neon Database serverless PostgreSQL
-- **Local Storage**: In-memory storage implementation as fallback/development option
-- **File Storage**: Local file system with Base64 encoding for audio files
+### File Structure
+```
+client/
+├── src/
+│   ├── components/
+│   │   ├── device-scanner-dialog.tsx  # Device scanning UI
+│   │   ├── bottom-player.tsx         # Audio player controls
+│   │   └── sidebar.tsx               # Navigation sidebar
+│   ├── hooks/
+│   │   ├── use-device-scanner.tsx    # Device scanning logic
+│   │   ├── use-audio-player.tsx      # Audio playback logic
+│   │   └── use-file-upload.tsx       # File upload handling
+│   ├── lib/
+│   │   ├── mobile-audio-manager.ts   # Mobile audio handling
+│   │   ├── id3-parser.ts             # ID3 tag parsing
+│   │   └── offline-storage.ts        # IndexedDB management
+│   └── pages/
+│       ├── home.tsx
+│       ├── library.tsx
+│       └── search.tsx
+server/
+├── routes.ts                          # API endpoints
+├── storage.ts                         # Data storage interface
+└── index.ts                           # Server entry point
+shared/
+└── schema.ts                          # Database schema definitions
+```
 
-## Database Schema
-- **Tracks**: Audio file metadata including title, artist, album, duration, file URL, and JSON metadata
-- **Playlists**: Named collections of track IDs with system playlist support
-- **User Preferences**: Playback settings including volume, shuffle, repeat, and current playback state
+### Data Flow
+1. **Device Scanning**: User selects folder/files → Parse metadata → Store in DB → Play directly
+2. **File Upload**: User uploads files → Convert to data URL (small) or blob URL (large) → Store in DB
+3. **Playback**: Load track → Create audio context → Play with controls → Update Media Session
 
-## External Dependencies
-- **Google Drive Integration**: API access for importing music files from user's Google Drive
-- **Font Services**: Google Fonts for typography (Inter, DM Sans, Fira Code, Geist Mono, Architects Daughter)
-- **Development Tools**: Replit-specific plugins for development environment integration
-- **Audio Codecs**: Support for MP3, WAV, FLAC, M4A, and AAC formats through Web Audio API
+## User Preferences
+- Keep audio files on device without uploading to servers
+- Support for direct playback from device storage
+- Maintain privacy by not uploading personal music files
 
-The application uses a monorepo structure with shared TypeScript types and schemas between client and server, ensuring type safety across the full stack. The modular component architecture allows for easy extension and maintenance of features.
+## Development Guidelines
+- Use in-memory storage for development
+- Always validate with Zod schemas
+- Keep frontend logic minimal, backend handles persistence
+- Use React Query for all data fetching
+- Implement proper error handling with user-friendly messages
+
+## Features Roadmap
+- [ ] Playlist management
+- [ ] Recently played tracking
+- [ ] Artists and albums pages
+- [ ] Advanced search functionality
+- [ ] Cloud sync across devices
+- [ ] Equalizer and audio effects

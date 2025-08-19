@@ -8,7 +8,8 @@ import {
   Disc, 
   Upload, 
   Wifi, 
-  Music 
+  Music,
+  HardDrive 
 } from 'lucide-react';
 import { SiGoogledrive } from 'react-icons/si';
 import { cn } from '@/lib/utils';
@@ -16,10 +17,11 @@ import { cn } from '@/lib/utils';
 interface SidebarProps {
   onUploadClick: () => void;
   onGoogleDriveClick: () => void;
+  onDeviceScanClick: () => void;
   isGoogleDriveConnected: boolean;
 }
 
-export function Sidebar({ onUploadClick, onGoogleDriveClick, isGoogleDriveConnected }: SidebarProps) {
+export function Sidebar({ onUploadClick, onGoogleDriveClick, onDeviceScanClick, isGoogleDriveConnected }: SidebarProps) {
   const [location] = useLocation();
 
   const navigationItems = [
@@ -109,6 +111,15 @@ export function Sidebar({ onUploadClick, onGoogleDriveClick, isGoogleDriveConnec
             <Wifi className="w-5 h-5 text-green-400" />
             <span className="text-green-400 text-sm font-medium">Online</span>
           </div>
+          
+          {/* Scan Device */}
+          <button
+            onClick={onDeviceScanClick}
+            className="w-full flex items-center space-x-3 p-3 rounded-lg text-neutral hover:text-white hover:bg-neutral/20 transition-colors"
+          >
+            <HardDrive className="w-5 h-5" />
+            <span>Scan Device</span>
+          </button>
           
           {/* Upload Local Files */}
           <button

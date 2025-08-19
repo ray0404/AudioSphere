@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Menu } from "lucide-react";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { DeviceScannerDialog } from "@/components/device-scanner-dialog";
 
 function Router() {
   return (
@@ -54,6 +55,7 @@ function Router() {
 function App() {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showGoogleDriveDialog, setShowGoogleDriveDialog] = useState(false);
+  const [showDeviceScanDialog, setShowDeviceScanDialog] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [folderUrl, setFolderUrl] = useState('');
   
@@ -77,6 +79,10 @@ function App() {
 
   const handleGoogleDriveClick = () => {
     setShowGoogleDriveDialog(true);
+  };
+
+  const handleDeviceScanClick = () => {
+    setShowDeviceScanDialog(true);
   };
 
   const handleConnectGoogleDrive = async () => {
@@ -106,6 +112,7 @@ function App() {
             <Sidebar 
               onUploadClick={handleUploadClick}
               onGoogleDriveClick={handleGoogleDriveClick}
+              onDeviceScanClick={handleDeviceScanClick}
               isGoogleDriveConnected={isGoogleDriveConnected}
             />
           )}
@@ -125,6 +132,10 @@ function App() {
                   }}
                   onGoogleDriveClick={() => {
                     handleGoogleDriveClick();
+                    setShowMobileSidebar(false);
+                  }}
+                  onDeviceScanClick={() => {
+                    handleDeviceScanClick();
                     setShowMobileSidebar(false);
                   }}
                   isGoogleDriveConnected={isGoogleDriveConnected}
@@ -280,6 +291,12 @@ function App() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Device Scanner Dialog */}
+        <DeviceScannerDialog
+          open={showDeviceScanDialog}
+          onOpenChange={setShowDeviceScanDialog}
+        />
 
           <Toaster />
           <PWAInstallPrompt />
