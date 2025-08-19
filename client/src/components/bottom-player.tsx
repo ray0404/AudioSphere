@@ -11,6 +11,8 @@ export function BottomPlayer() {
   const [startY, setStartY] = useState(0);
   const isMobile = useIsMobile();
   
+  console.log('BottomPlayer render - showNowPlaying:', showNowPlaying);
+  
   const {
     currentTrack,
     isPlaying,
@@ -49,9 +51,8 @@ export function BottomPlayer() {
   };
 
   const handleTrackAreaClick = () => {
-    if (!isMobile) {
-      setShowNowPlaying(true);
-    }
+    console.log('Track area clicked, isMobile:', isMobile);
+    setShowNowPlaying(true);
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -61,9 +62,11 @@ export function BottomPlayer() {
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (isMobile && startY > 0) {
+    if (startY > 0) {
       const deltaY = startY - e.touches[0].clientY;
+      console.log('Touch move, deltaY:', deltaY);
       if (deltaY > 30) { // Swipe up threshold
+        console.log('Swipe up detected, opening Now Playing');
         setShowNowPlaying(true);
         setStartY(0);
       }

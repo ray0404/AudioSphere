@@ -135,6 +135,8 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  console.log('NowPlaying render - isOpen:', isOpen, 'currentTrack:', currentTrack?.title);
+  
   if (!currentTrack) return null;
 
   return (
