@@ -221,14 +221,20 @@ export function useAudioPlayer() {
     return (state.currentTime / state.duration) * 100;
   }, [state.currentTime, state.duration]);
 
-  // Set up track end handler after nextTrack is defined
+  // Set up track end handler and navigation callbacks after nextTrack is defined
   useEffect(() => {
     if (audioManagerRef.current) {
       audioManagerRef.current.onEnded(() => {
         nextTrack();
       });
+      
+      // Set navigation callbacks for media session controls
+      audioManagerRef.current.setNavigationCallbacks(
+        () => previousTrack(),
+        () => nextTrack()
+      );
     }
-  }, [nextTrack]);
+  }, [nextTrack, previousTrack]);
 
   return {
     // State

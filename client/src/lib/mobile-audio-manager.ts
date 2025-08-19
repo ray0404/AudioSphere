@@ -10,6 +10,8 @@ export class MobileAudioManager {
   private audioElement: HTMLAudioElement;
   private currentMetadata: AudioMetadata | null = null;
   private hasMediaSession = false;
+  private onPreviousCallback?: () => void;
+  private onNextCallback?: () => void;
 
   constructor() {
     this.audioElement = new Audio();
@@ -123,12 +125,16 @@ export class MobileAudioManager {
 
       navigator.mediaSession.setActionHandler('previoustrack', () => {
         console.log('MediaSession: Previous track');
-        // Will be handled by the app
+        if (this.onPreviousCallback) {
+          this.onPreviousCallback();
+        }
       });
 
       navigator.mediaSession.setActionHandler('nexttrack', () => {
         console.log('MediaSession: Next track');
-        // Will be handled by the app
+        if (this.onNextCallback) {
+          this.onNextCallback();
+        }
       });
 
       console.log('✓ MediaSession handlers initialized');
@@ -271,6 +277,11 @@ export class MobileAudioManager {
     this.audioElement.addEventListener('timeupdate', () => {
       callback(this.audioElement.currentTime);
     });
+  }
+
+  setNavigationCallbacks(onPrevious: () => void, onNext: () => void): void {
+    this.onPreviousCallback = onPrevious;
+    this.onNextCallback = onNext;
   }
 
   destroy(): void {
