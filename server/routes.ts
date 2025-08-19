@@ -155,6 +155,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Google Drive proxy endpoint
+  app.get("/api/drive-proxy/:fileId", async (req, res) => {
+    try {
+      const { fileId } = req.params;
+      const apiKey = process.env.VITE_GOOGLE_DRIVE_API_KEY;
+      
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Drive API key not configured" });
+      }
+
+      const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`;
+      
+      // Forward the request to Google Drive
+      const response = await fetch(driveUrl);
+      
+      if (!response.ok) {
+        return res.status(response.status).json({ message: "Failed to fetch file from Google Drive" });
+      }
+
+      // Set appropriate headers
+      res.set({
+        'Content-Type': response.headers.get('content-type') || 'audio/mpeg',
+        'Content-Length': response.headers.get('content-length') || '',
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'public, max-age=3600'
+      });
+
+      // Stream the audio data
+      if (response.body) {
+        const reader = response.body.getReader();
+        const pump = async () => {
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              res.write(Buffer.from(value));
+            }
+            res.end();
+          } catch (error) {
+            console.error('Stream error:', error);
+            res.end();
+          }
+        };
+        pump();
+      } else {
+        res.end();
+      }
+    } catch (error) {
+      console.error('Google Drive proxy error:', error);
+      res.status(500).json({ message: "Failed to proxy Google Drive file" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

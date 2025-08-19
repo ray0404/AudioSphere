@@ -46,12 +46,17 @@ export class AudioManager {
           const blob = await response.blob();
           arrayBuffer = await blob.arrayBuffer();
         } else {
-          // Regular URL
-          const response = await fetch(fetchUrl, {
-            headers: {
-              'Accept': 'audio/*,*/*;q=0.9',
-            }
-          });
+          // Regular URL - handle Google Drive API URLs
+          const headers: Record<string, string> = {
+            'Accept': 'audio/*,*/*;q=0.9',
+          };
+          
+          // For Google Drive API URLs, we need different handling
+          if (file.includes('googleapis.com/drive')) {
+            headers['Range'] = 'bytes=0-'; // Request full file
+          }
+          
+          const response = await fetch(fetchUrl, { headers });
           
           if (!response.ok) {
             throw new Error(`Failed to fetch audio: ${response.status} ${response.statusText}`);

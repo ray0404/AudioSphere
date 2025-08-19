@@ -106,7 +106,8 @@ export class ID3Parser {
           break;
         case 'APIC':
           // Handle album art (simplified)
-          tags.albumArt = this.extractAlbumArt(view, frameDataOffset, frameSize);
+          const albumArt = this.extractAlbumArt(view, frameDataOffset, frameSize);
+          if (albumArt) tags.albumArt = albumArt;
           break;
       }
 

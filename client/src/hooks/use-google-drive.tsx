@@ -241,24 +241,51 @@ The folder link appears valid but requires API authentication to access programm
         const driveFile = state.files.find(f => f.id === fileId);
         if (!driveFile) continue;
 
-        // Create track data for Google Drive file
-        const trackData = {
-          title: driveFile.name.replace(/\.[^/.]+$/, ""),
-          artist: 'Unknown Artist',
-          album: 'Google Drive Import',
-          genre: 'Unknown',
-          duration: 0, // Will be set when file is loaded
-          fileUrl: driveFile.downloadUrl,
-          fileSource: 'google_drive' as const,
-          albumArt: driveFile.thumbnailLink || null,
-          metadata: {
-            googleDriveId: driveFile.id,
-            originalFileName: driveFile.name,
-            fileSize: parseInt(driveFile.size),
-            mimeType: driveFile.mimeType,
-            importDate: new Date().toISOString(),
-          },
-        };
+        // Download file to extract metadata
+        let trackData;
+        try {
+          // Use our proxy endpoint for better authentication handling
+          const downloadUrl = `/api/drive-proxy/${driveFile.id}`;
+          
+          // For now, use basic metadata since direct download requires more complex auth
+          trackData = {
+            title: driveFile.name.replace(/\.[^/.]+$/, ""),
+            artist: 'Unknown Artist',
+            album: 'Google Drive Import',
+            genre: 'Unknown',
+            duration: 0,
+            fileUrl: downloadUrl, // Use API endpoint instead of uc URL
+            fileSource: 'google_drive' as const,
+            albumArt: driveFile.thumbnailLink || null,
+            metadata: {
+              googleDriveId: driveFile.id,
+              originalFileName: driveFile.name,
+              fileSize: parseInt(driveFile.size),
+              mimeType: driveFile.mimeType,
+              importDate: new Date().toISOString(),
+            },
+          };
+        } catch (error) {
+          console.error('Error processing Google Drive file:', error);
+          // Fallback to basic track data
+          trackData = {
+            title: driveFile.name.replace(/\.[^/.]+$/, ""),
+            artist: 'Unknown Artist',
+            album: 'Google Drive Import',
+            genre: 'Unknown',
+            duration: 0,
+            fileUrl: `/api/drive-proxy/${driveFile.id}`,
+            fileSource: 'google_drive' as const,
+            albumArt: driveFile.thumbnailLink || null,
+            metadata: {
+              googleDriveId: driveFile.id,
+              originalFileName: driveFile.name,
+              fileSize: parseInt(driveFile.size),
+              mimeType: driveFile.mimeType,
+              importDate: new Date().toISOString(),
+            },
+          };
+        }
 
         try {
           const response = await apiRequest('POST', '/api/tracks', trackData);
