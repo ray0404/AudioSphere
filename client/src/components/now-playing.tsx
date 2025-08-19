@@ -247,13 +247,13 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
           </div>
 
           {/* Time Display */}
-          <div className="flex justify-between text-sm opacity-70 mb-8">
+          <div className="flex justify-between text-sm opacity-70 mb-4">
             <span>{formatTime(currentTime)}</span>
             <span>-{formatTime(duration - currentTime)}</span>
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-center space-x-8 mb-6">
+          <div className="flex items-center justify-center space-x-8 mb-3">
             <button
               onClick={(e) => {
                 previousTrack();
@@ -296,7 +296,7 @@ export function NowPlaying({ isOpen, onClose }: NowPlayingProps) {
           </div>
 
           {/* Secondary Controls */}
-          <div className="flex items-center justify-between opacity-70">
+          <div className="flex items-center justify-between opacity-70 mt-2">
             <button
               onClick={(e) => {
                 toggleShuffle();
