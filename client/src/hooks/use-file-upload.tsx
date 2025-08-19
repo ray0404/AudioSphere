@@ -4,6 +4,7 @@ import { createAudioURL } from '@/lib/audio-utils';
 import { Track } from '@shared/schema';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { OfflineStorage } from '@/lib/offline-storage';
 
 interface UploadState {
   isUploading: boolean;
@@ -19,6 +20,7 @@ export function useFileUpload() {
   });
 
   const { toast } = useToast();
+  const offlineStorage = new OfflineStorage();
 
   const uploadFiles = useCallback(async (files: File[]): Promise<Track[]> => {
     setState({ isUploading: true, uploadProgress: 0, error: null });
@@ -53,13 +55,23 @@ export function useFileUpload() {
           const tags = await ID3Parser.parseFile(file);
           const duration = await ID3Parser.getDuration(file);
           
-          // Convert file to base64 data URL for storage
-          const reader = new FileReader();
-          const fileDataUrl = await new Promise<string>((resolve, reject) => {
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
+          // For smaller files (< 10MB), convert to data URL
+          // For larger files, we'll need a different approach
+          let fileUrl: string;
+          
+          if (file.size < 10 * 1024 * 1024) { // 10MB
+            // Small file - convert to data URL
+            const reader = new FileReader();
+            fileUrl = await new Promise<string>((resolve, reject) => {
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+          } else {
+            // Large file - create blob URL temporarily
+            // Note: This will only work for current session
+            fileUrl = createAudioURL(file);
+          }
           
           // Prepare track data
           const trackData = {
@@ -68,7 +80,7 @@ export function useFileUpload() {
             album: tags.album || 'Unknown Album',
             genre: tags.genre || 'Unknown',
             duration: Math.round(duration),
-            fileUrl: fileDataUrl,
+            fileUrl,
             fileSource: 'local' as const,
             albumArt: tags.albumArt || null,
             metadata: {
@@ -76,6 +88,7 @@ export function useFileUpload() {
               fileSize: file.size,
               fileType: file.type,
               uploadDate: new Date().toISOString(),
+              isLargeFile: file.size >= 10 * 1024 * 1024,
               ...tags,
             },
           };
@@ -84,6 +97,15 @@ export function useFileUpload() {
           const response = await apiRequest('POST', '/api/tracks', trackData);
           const savedTrack = await response.json();
           uploadedTracks.push(savedTrack);
+          
+          // Save audio blob to IndexedDB for offline use (only for larger files)
+          if (file.size >= 10 * 1024 * 1024) {
+            try {
+              await offlineStorage.saveAudioBlob(savedTrack.id, file);
+            } catch (err) {
+              console.warn('Failed to save audio for offline use:', err);
+            }
+          }
 
         } catch (fileError) {
           console.error(`Failed to process file ${file.name}:`, fileError);
