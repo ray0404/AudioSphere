@@ -52,7 +52,7 @@ export default function SearchPage() {
     ? tracks.filter(track =>
         track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         track.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (track.album && track.album.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        track.album.toLowerCase().includes(searchQuery.toLowerCase()) ||
         track.genre?.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
@@ -78,15 +78,7 @@ export default function SearchPage() {
 
   // Popular/trending tracks (most recently added)
   const popularTracks = tracks
-    .sort((a, b) => {
-      const dateA = a.metadata && typeof a.metadata === 'object' && 'uploadDate' in a.metadata 
-        ? new Date(a.metadata.uploadDate as string).getTime() 
-        : 0;
-      const dateB = b.metadata && typeof b.metadata === 'object' && 'uploadDate' in b.metadata 
-        ? new Date(b.metadata.uploadDate as string).getTime() 
-        : 0;
-      return dateB - dateA;
-    })
+    .sort((a, b) => new Date(b.metadata?.uploadDate || 0).getTime() - new Date(a.metadata?.uploadDate || 0).getTime())
     .slice(0, 12);
 
   return (
@@ -240,7 +232,7 @@ export default function SearchPage() {
                             <h4 className="font-medium text-white truncate">{track.title}</h4>
                             <p className="text-neutral text-sm truncate">{track.artist}</p>
                           </div>
-                          <p className="text-neutral text-sm">{Math.floor((track.duration || 0) / 60)}:{Math.floor((track.duration || 0) % 60).toString().padStart(2, '0')}</p>
+                          <p className="text-neutral text-sm">{Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}</p>
                         </div>
                       ))}
                     </div>
