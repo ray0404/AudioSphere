@@ -1,9 +1,16 @@
+import { useState } from 'react';
 import { Heart, Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, List, Volume2, VolumeX, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAudioContext } from '@/contexts/audio-context';
 import { Slider } from '@/components/ui/slider';
+import { NowPlaying } from '@/components/now-playing';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function BottomPlayer() {
+  const [showNowPlaying, setShowNowPlaying] = useState(false);
+  const [startY, setStartY] = useState(0);
+  const isMobile = useIsMobile();
+  
   const {
     currentTrack,
     isPlaying,
@@ -41,6 +48,32 @@ export function BottomPlayer() {
     setVolume(value[0] / 100);
   };
 
+  const handleTrackAreaClick = () => {
+    if (!isMobile) {
+      setShowNowPlaying(true);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isMobile) {
+      setStartY(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isMobile && startY > 0) {
+      const deltaY = startY - e.touches[0].clientY;
+      if (deltaY > 30) { // Swipe up threshold
+        setShowNowPlaying(true);
+        setStartY(0);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setStartY(0);
+  };
+
   if (!currentTrack) {
     return null;
   }
@@ -48,7 +81,8 @@ export function BottomPlayer() {
   const albumArtSrc = currentTrack.albumArt || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&auto=format&fit=crop&w=56&h=56';
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-secondary/95 backdrop-blur-md border-t border-neutral/20 px-2 md:px-4 py-3 z-50">
+    <>
+      <div className="fixed bottom-0 left-0 right-0 bg-secondary/95 backdrop-blur-md border-t border-neutral/20 px-2 md:px-4 py-3 z-50">
       {/* Mobile Layout */}
       <div className="block md:hidden">
         {/* Progress Bar */}
@@ -69,7 +103,13 @@ export function BottomPlayer() {
         {/* Track Info & Controls */}
         <div className="flex items-center justify-between">
           {/* Track Info */}
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <div 
+            className="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer"
+            onClick={handleTrackAreaClick}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             <img
               src={albumArtSrc}
               alt={`${currentTrack.album} by ${currentTrack.artist}`}
@@ -122,7 +162,10 @@ export function BottomPlayer() {
       {/* Desktop Layout */}
       <div className="hidden md:flex items-center justify-between">
         {/* Currently Playing Track Info */}
-        <div className="flex items-center space-x-3 flex-1 min-w-0">
+        <div 
+          className="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer"
+          onClick={handleTrackAreaClick}
+        >
           <img
             src={albumArtSrc}
             alt={`${currentTrack.album} by ${currentTrack.artist}`}
@@ -140,7 +183,10 @@ export function BottomPlayer() {
               {currentTrack.artist}
             </p>
           </div>
-          <button className="text-neutral hover:text-white transition-colors">
+          <button 
+            className="text-neutral hover:text-white transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Heart className="w-5 h-5" />
           </button>
         </div>
@@ -251,5 +297,11 @@ export function BottomPlayer() {
         </div>
       </div>
     </div>
+
+    <NowPlaying 
+      isOpen={showNowPlaying} 
+      onClose={() => setShowNowPlaying(false)} 
+    />
+  </>
   );
 }
