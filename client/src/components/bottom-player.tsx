@@ -48,7 +48,7 @@ export function BottomPlayer() {
   const albumArtSrc = currentTrack.albumArt || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&auto=format&fit=crop&w=56&h=56';
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-secondary border-t border-neutral/20 px-2 md:px-4 py-3 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-secondary/95 backdrop-blur-md border-t border-neutral/20 px-2 md:px-4 py-3 z-50">
       {/* Mobile Layout */}
       <div className="block md:hidden">
         {/* Progress Bar */}

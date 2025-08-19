@@ -31,7 +31,7 @@ export function useAudioPlayer() {
     currentIndex: -1,
   });
 
-  // Initialize audio manager
+  // Initialize audio manager 
   useEffect(() => {
     audioManagerRef.current = new AudioManager();
     
@@ -39,6 +39,43 @@ export function useAudioPlayer() {
       audioManagerRef.current?.destroy();
     };
   }, []);
+
+  // Setup Media Session API handlers
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (audioManagerRef.current && state.currentTrack) {
+          audioManagerRef.current.play();
+          setState(prev => ({ ...prev, isPlaying: true }));
+        }
+      });
+      
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (audioManagerRef.current) {
+          audioManagerRef.current.pause();
+          setState(prev => ({ ...prev, isPlaying: false }));
+        }
+      });
+      
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        if (state.playlist.length > 0) {
+          let prevIndex = state.currentIndex - 1;
+          if (prevIndex < 0) prevIndex = state.playlist.length - 1;
+          setState(prev => ({ ...prev, currentIndex: prevIndex }));
+          play(state.playlist[prevIndex]);
+        }
+      });
+      
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        if (state.playlist.length > 0) {
+          let nextIndex = state.currentIndex + 1;
+          if (nextIndex >= state.playlist.length) nextIndex = 0;
+          setState(prev => ({ ...prev, currentIndex: nextIndex }));
+          play(state.playlist[nextIndex]);
+        }
+      });
+    }
+  }, [state.currentTrack, state.playlist, state.currentIndex]);
 
   // Update progress
   useEffect(() => {
@@ -84,6 +121,12 @@ export function useAudioPlayer() {
   const play = useCallback(async (track?: Track) => {
     if (!audioManagerRef.current) return;
 
+    // Single-track enforcement: stop current track if playing different track
+    if (track && state.currentTrack && track.id !== state.currentTrack.id && state.isPlaying) {
+      audioManagerRef.current.pause();
+      setState(prev => ({ ...prev, isPlaying: false }));
+    }
+
     if (track && track.id !== state.currentTrack?.id) {
       await loadTrack(track);
     }
@@ -91,15 +134,32 @@ export function useAudioPlayer() {
     if (state.currentTrack) {
       audioManagerRef.current.play(state.currentTime);
       setState(prev => ({ ...prev, isPlaying: true }));
+      updateMediaSession();
     }
-  }, [state.currentTrack, state.currentTime, loadTrack]);
+  }, [state.currentTrack, state.currentTime, state.isPlaying, loadTrack]);
+
+  const updateMediaSession = useCallback(() => {
+    if ('mediaSession' in navigator && state.currentTrack) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: state.currentTrack.title,
+        artist: state.currentTrack.artist,
+        album: state.currentTrack.album,
+        artwork: state.currentTrack.albumArt ? [
+          { src: state.currentTrack.albumArt, sizes: '512x512', type: 'image/jpeg' }
+        ] : []
+      });
+      
+      navigator.mediaSession.playbackState = state.isPlaying ? 'playing' : 'paused';
+    }
+  }, [state.currentTrack, state.isPlaying]);
 
   const pause = useCallback(() => {
     if (!audioManagerRef.current) return;
     
     audioManagerRef.current.pause();
     setState(prev => ({ ...prev, isPlaying: false }));
-  }, []);
+    updateMediaSession();
+  }, [updateMediaSession]);
 
   const togglePlayPause = useCallback(() => {
     if (state.isPlaying) {

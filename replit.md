@@ -18,6 +18,11 @@ SoundWave is a fully functional progressive web application (PWA) music player b
 - ✅ Complete Search page with search history and advanced filtering
 - ✅ Fixed audio loading issues and improved error handling
 - ✅ Optimized scrolling performance for mobile devices
+- ✅ Single-track playback enforcement (only one track plays at a time)
+- ✅ Persistent bottom media player bar across all pages
+- ✅ Media Session API integration for background playback and lock screen controls
+- ✅ Google Drive proxy endpoint for secure authenticated streaming
+- ✅ Enhanced playback persistence across page switches and app backgrounding
 
 # User Preferences
 
