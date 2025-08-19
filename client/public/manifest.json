@@ -3,15 +3,10 @@
   "short_name": "SoundWave",
   "description": "A comprehensive audio player supporting local files and Google Drive integration with offline capability",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#121212",
   "theme_color": "#9C4F2C",
-  "orientation": "any",
-  "dir": "ltr",
-  "lang": "en-US",
-  "prefer_related_applications": false,
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiM5QzRGMkMiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxwYXRoIGQ9Im05IDEyIDIgMiA0LTQiLz4KPHN2ZyB4PSI0IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iOCI+CjxwYXRoIGQ9Ik0yIDZzMS41LTEgNC0xIDQgMSA0IDEgMS41LTEgNC0xIDQgMSA0IDEtMS41IDEtNCAxLTQtMS00LTEtMS41IDEtNCAxLTQtMS00LTEiLz4KPHN2ZyB4PSI2IiB5PSIxNCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjIiPgo8cGF0aCBkPSJNNiAxNGgxMiIvPgo8L3N2Zz4KPC9zdmc+Cjwvc3ZnPg==",
@@ -39,73 +34,13 @@
   "shortcuts": [
     {
       "name": "Upload Music",
-      "short_name": "Upload",
       "url": "/?action=upload",
-      "description": "Upload local music files",
-      "icons": [{"src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI0OCIgY3k9IjQ4IiByPSI0OCIgZmlsbD0iIzlDNEYyQyIvPjxwYXRoIGQ9Ik00OCAzNnYyNG0wLTI0bDgtOG0tOCA4bC04LTgiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+", "sizes": "96x96"}]
+      "description": "Upload local music files"
     },
     {
       "name": "Connect Google Drive",
-      "short_name": "Drive",
       "url": "/?action=google-drive",
-      "description": "Connect to Google Drive",
-      "icons": [{"src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI0OCIgY3k9IjQ4IiByPSI0OCIgZmlsbD0iIzlDNEYyQyIvPjxwYXRoIGQ9Ik00MiAzNmwxMiAyMGwxMi0yMEw1NCA1Nkw0MiAzNnoiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+", "sizes": "96x96"}]
-    },
-    {
-      "name": "Recently Played",
-      "short_name": "Recent",
-      "url": "/recent",
-      "description": "View recently played tracks",
-      "icons": [{"src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI0OCIgY3k9IjQ4IiByPSI0OCIgZmlsbD0iIzlDNEYyQyIvPjxjaXJjbGUgY3g9IjQ4IiBjeT0iNDgiIHI9IjE2IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNNDggNDB2OGw2IDYiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+", "sizes": "96x96"}]
+      "description": "Connect to Google Drive"
     }
-  ],
-  "protocol_handlers": [
-    {
-      "protocol": "web+soundwave",
-      "url": "/?track=%s"
-    }
-  ],
-  "share_target": {
-    "action": "/share",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url",
-      "files": [
-        {
-          "name": "audio",
-          "accept": ["audio/*", ".mp3", ".wav", ".flac", ".m4a", ".ogg"]
-        }
-      ]
-    }
-  },
-  "related_applications": [],
-  "file_handlers": [
-    {
-      "action": "/",
-      "accept": {
-        "audio/mp3": [".mp3"],
-        "audio/mpeg": [".mp3"],
-        "audio/wav": [".wav"],
-        "audio/flac": [".flac"],
-        "audio/m4a": [".m4a"],
-        "audio/ogg": [".ogg"],
-        "audio/*": ["*"]
-      }
-    }
-  ],
-  "launch_handler": {
-    "client_mode": ["auto"]
-  },
-  "edge_side_panel": {
-    "preferred_width": 400
-  },
-  "permissions_policy": {
-    "autoplay": ["self"],
-    "camera": [],
-    "microphone": [],
-    "geolocation": []
-  }
+  ]
 }
