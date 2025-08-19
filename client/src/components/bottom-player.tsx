@@ -1,6 +1,6 @@
 import { Heart, Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, List, Volume2, VolumeX, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAudioPlayer } from '@/hooks/use-audio-player';
+import { useAudioContext } from '@/contexts/audio-context';
 import { Slider } from '@/components/ui/slider';
 
 export function BottomPlayer() {
@@ -23,7 +23,7 @@ export function BottomPlayer() {
     toggleRepeat,
     getFormattedTime,
     getProgress,
-  } = useAudioPlayer();
+  } = useAudioContext();
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!duration) return;

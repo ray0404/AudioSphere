@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Download, User } from 'lucide-react';
 import { Track } from '@shared/schema';
 import { TrackCard } from '@/components/track-card';
 import { UploadArea } from '@/components/upload-area';
-import { useAudioPlayer } from '@/hooks/use-audio-player';
+import { useAudioContext } from '@/contexts/audio-context';
 import { useGoogleDrive } from '@/hooks/use-google-drive';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ export default function Home() {
     isPlaying, 
     play, 
     setPlaylist 
-  } = useAudioPlayer();
+  } = useAudioContext();
   
   const { 
     isConnected: isGoogleDriveConnected, 

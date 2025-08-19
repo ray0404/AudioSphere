@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import { Sidebar } from "@/components/sidebar";
 import { BottomPlayer } from "@/components/bottom-player";
+import { AudioProvider } from "@/contexts/audio-context";
 import { useGoogleDrive } from "@/hooks/use-google-drive";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -96,8 +97,9 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <div className="flex h-screen bg-background text-foreground overflow-hidden">
+      <AudioProvider>
+        <TooltipProvider>
+          <div className="flex h-screen bg-background text-foreground overflow-hidden">
           {/* Desktop Sidebar */}
           {!isMobile && (
             <Sidebar 
@@ -130,7 +132,7 @@ function App() {
             </div>
           )}
           
-          <main className="flex-1 flex flex-col min-w-0">
+          <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
             {/* Mobile Header */}
             {isMobile && (
               <div className="bg-secondary border-b border-neutral/20 p-4 flex items-center justify-between lg:hidden">
@@ -149,7 +151,9 @@ function App() {
                 <div className="w-6" /> {/* Spacer for centering */}
               </div>
             )}
-            <Router />
+            <div className="flex-1 overflow-y-auto pb-32 scrollable-content">
+              <Router />
+            </div>
           </main>
           <BottomPlayer />
         </div>
@@ -276,8 +280,9 @@ function App() {
           </DialogContent>
         </Dialog>
 
-        <Toaster />
-      </TooltipProvider>
+          <Toaster />
+        </TooltipProvider>
+      </AudioProvider>
     </QueryClientProvider>
   );
 }

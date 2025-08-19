@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Clock, TrendingUp, Music, User, Disc } from 'lucide-react';
 import { Track } from '@shared/schema';
-import { useAudioPlayer } from '@/hooks/use-audio-player';
+import { useAudioContext } from '@/contexts/audio-context';
 import { TrackCard } from '@/components/track-card';
 import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,7 +12,7 @@ export default function SearchPage() {
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const isMobile = useIsMobile();
   
-  const { currentTrack, isPlaying, play } = useAudioPlayer();
+  const { currentTrack, isPlaying, play } = useAudioContext();
   
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
     queryKey: ['/api/tracks'],

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Filter, Grid, List, Music, User, Disc } from 'lucide-react';
 import { Track } from '@shared/schema';
-import { useAudioPlayer } from '@/hooks/use-audio-player';
+import { useAudioContext } from '@/contexts/audio-context';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,7 +14,7 @@ export default function Library() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const isMobile = useIsMobile();
   
-  const { currentTrack, isPlaying, play } = useAudioPlayer();
+  const { currentTrack, isPlaying, play, setPlaylist } = useAudioContext();
   
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
     queryKey: ['/api/tracks'],

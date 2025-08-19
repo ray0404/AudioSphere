@@ -121,22 +121,23 @@ export function useAudioPlayer() {
   const play = useCallback(async (track?: Track) => {
     if (!audioManagerRef.current) return;
 
-    // Single-track enforcement: stop current track if playing different track
-    if (track && state.currentTrack && track.id !== state.currentTrack.id && state.isPlaying) {
+    // Single-track enforcement: always pause current audio first
+    if (state.isPlaying) {
       audioManagerRef.current.pause();
       setState(prev => ({ ...prev, isPlaying: false }));
     }
 
-    if (track && track.id !== state.currentTrack?.id) {
+    // If new track is provided and different from current, load it
+    if (track && (!state.currentTrack || track.id !== state.currentTrack.id)) {
       await loadTrack(track);
     }
 
-    if (state.currentTrack) {
-      audioManagerRef.current.play(state.currentTime);
+    // Play the current track
+    if (state.currentTrack || track) {
+      audioManagerRef.current.play(0); // Always start from beginning for new tracks
       setState(prev => ({ ...prev, isPlaying: true }));
-      updateMediaSession();
     }
-  }, [state.currentTrack, state.currentTime, state.isPlaying, loadTrack]);
+  }, [state.currentTrack, state.isPlaying, loadTrack]);
 
   const updateMediaSession = useCallback(() => {
     if ('mediaSession' in navigator && state.currentTrack) {
@@ -146,7 +147,7 @@ export function useAudioPlayer() {
         album: state.currentTrack.album,
         artwork: state.currentTrack.albumArt ? [
           { src: state.currentTrack.albumArt, sizes: '512x512', type: 'image/jpeg' }
-        ] : []
+        ] : undefined
       });
       
       navigator.mediaSession.playbackState = state.isPlaying ? 'playing' : 'paused';
