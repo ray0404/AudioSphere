@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrackCard } from '@/components/track-card';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Link } from 'wouter';
 
 export default function Library() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -173,30 +174,11 @@ export default function Library() {
           </TabsContent>
           
           <TabsContent value="albums">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
-              {Object.values(albums).map((album) => (
-                <div
-                  key={`${album.name}-${album.artist}`}
-                  className="bg-secondary/40 p-3 md:p-4 rounded-lg cursor-pointer hover:bg-secondary/60 transition-colors"
-                  onClick={() => handleTrackPlay(album.tracks[0])}
-                >
-                  <div className="relative mb-3">
-                    <img
-                      src={album.albumArt || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200'}
-                      alt={album.name}
-                      className="w-full aspect-square object-cover rounded-lg shadow-lg"
-                    />
-                    <div className="absolute bottom-2 right-2">
-                      <button className="w-8 h-8 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Disc className="w-4 h-4 text-white" />
-                      </button>
-                    </div>
-                  </div>
-                  <h4 className="font-medium text-white truncate text-sm">{album.name || 'Unknown Album'}</h4>
-                  <p className="text-neutral text-xs truncate">{album.artist || 'Unknown Artist'}</p>
-                  <p className="text-neutral text-xs">{album.tracks.length} track{album.tracks.length !== 1 ? 's' : ''}</p>
-                </div>
-              ))}
+            <div className="text-center py-12">
+              <p className="text-neutral mb-4">Albums view has been moved to a dedicated page for better browsing experience.</p>
+              <Link to="/albums" className="text-accent hover:text-accent/80 underline">
+                Go to Albums page
+              </Link>
             </div>
           </TabsContent>
           

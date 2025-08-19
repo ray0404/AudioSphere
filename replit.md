@@ -13,6 +13,21 @@ A cutting-edge progressive web audio player designed for seamless, intelligent m
 
 ## Recent Changes (January 20, 2025)
 
+### Artists & Albums Pages Implementation
+- **Comprehensive Artists Page**: Full hierarchical navigation (Artists → Albums → Songs)
+  - Metadata-based artist grouping from ID3 tags
+  - Artist page shows all albums by artist
+  - Album page shows all songs in album
+  - Play functionality at all levels (artist, album, track)
+  - Proper back navigation between levels
+
+- **Dedicated Albums Page**: Complete album browsing experience
+  - All albums listed with artist names displayed underneath
+  - Click album to view all songs in that album
+  - Album artwork display with fallback images
+  - Track count and duration information
+  - Play album functionality
+
 ### Device Scanning Feature Added
 - **New Device Scanner**: Users can now scan their device for audio files
   - Folder scanning using File System Access API (desktop browsers)
@@ -22,10 +37,19 @@ A cutting-edge progressive web audio player designed for seamless, intelligent m
   - Automatic ID3 tag parsing for metadata
   - Support for MP3, WAV, FLAC, M4A, AAC, OGG, OPUS, WMA, ALAC, AIFF, APE, WEBM formats
 
-### Components Added
+### Mobile Optimizations
+- **Fixed Mobile Scrolling**: Resolved touch scrolling issues on library page
+  - Removed overflow constraints that prevented natural scrolling
+  - Enhanced touch event handling for better mobile interaction
+  - Optimized CSS for smooth scrolling performance
+
+### Components Added/Updated
+- `artists.tsx` page: Complete artist browsing with hierarchical navigation
+- `albums.tsx` page: Dedicated album browsing experience
 - `useDeviceScanner` hook: Handles device scanning logic
 - `DeviceScannerDialog` component: UI for device scanning
 - Updated Sidebar with "Scan Device" button
+- Cleaned up Library page to focus on main track listing
 
 ## Project Architecture
 
@@ -54,9 +78,11 @@ client/
 │   │   ├── id3-parser.ts             # ID3 tag parsing
 │   │   └── offline-storage.ts        # IndexedDB management
 │   └── pages/
-│       ├── home.tsx
-│       ├── library.tsx
-│       └── search.tsx
+│       ├── home.tsx                  # Dashboard/landing page
+│       ├── library.tsx               # Main track listing
+│       ├── artists.tsx               # Artist browsing with hierarchical nav
+│       ├── albums.tsx                # Album browsing with track listings
+│       └── search.tsx                # Search functionality
 server/
 ├── routes.ts                          # API endpoints
 ├── storage.ts                         # Data storage interface

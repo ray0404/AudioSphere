@@ -55,7 +55,16 @@ function Router() {
           );
         }}
       </Route>
-      <Route path="/albums" component={() => <div className="p-6 text-white">Albums page coming soon...</div>} />
+      <Route path="/albums">
+        {() => {
+          const AlbumsPage = lazy(() => import("@/pages/albums"));
+          return (
+            <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>}>
+              <AlbumsPage />
+            </React.Suspense>
+          );
+        }}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
