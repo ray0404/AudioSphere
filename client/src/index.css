@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(210, 17%, 7%);
+  --foreground: hsl(0, 0%, 100%);
+  --card: hsl(210, 17%, 7%);
+  --card-foreground: hsl(0, 0%, 100%);
+  --popover: hsl(210, 17%, 7%);
+  --popover-foreground: hsl(0, 0%, 100%);
+  --primary: hsl(20, 53%, 39%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(210, 25%, 8%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(210, 17%, 7%);
+  --muted-foreground: hsl(0, 0%, 33%);
+  --accent: hsl(42, 100%, 53%);
+  --accent-foreground: hsl(210, 17%, 7%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(0, 0%, 33%);
+  --input: hsl(210, 17%, 7%);
+  --ring: hsl(20, 53%, 39%);
+  --neutral: hsl(0, 0%, 33%);
+  --font-inter: 'Inter', sans-serif;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: hsl(210, 17%, 7%);
+  --foreground: hsl(0, 0%, 100%);
+  --card: hsl(210, 17%, 7%);
+  --card-foreground: hsl(0, 0%, 100%);
+  --popover: hsl(210, 17%, 7%);
+  --popover-foreground: hsl(0, 0%, 100%);
+  --primary: hsl(20, 53%, 39%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(210, 25%, 8%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(210, 17%, 7%);
+  --muted-foreground: hsl(0, 0%, 33%);
+  --accent: hsl(42, 100%, 53%);
+  --accent-foreground: hsl(210, 17%, 7%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(0, 0%, 33%);
+  --input: hsl(210, 17%, 7%);
+  --ring: hsl(20, 53%, 39%);
+  --neutral: hsl(0, 0%, 33%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-[family-name:var(--font-inter)] antialiased;
+    font-family: var(--font-inter);
+    overflow: hidden;
+  }
+
+  html {
+    font-family: var(--font-inter);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--neutral));
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Audio player styles */
+.progress-bar {
+  position: relative;
+  background: hsl(var(--neutral) / 0.3);
+  height: 4px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.progress-bar:hover .progress-thumb {
+  opacity: 1;
+}
+
+.progress-fill {
+  background: hsl(var(--foreground));
+  height: 100%;
+  border-radius: 2px;
+  position: relative;
+}
+
+.progress-fill:hover {
+  background: hsl(var(--accent));
+}
+
+.progress-thumb {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: hsl(var(--foreground));
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Card hover effects */
+.track-card {
+  transition: all 0.3s ease;
+}
+
+.track-card:hover {
+  background: hsl(var(--secondary) / 0.6);
+  transform: translateY(-2px);
+}
+
+.track-card .play-button {
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.track-card:hover .play-button {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+/* Glassmorphism effects */
+.glass {
+  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animation keyframes */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Focus states */
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid hsl(var(--accent));
+  outline-offset: 2px;
+}
+
+/* Loading states */
+.skeleton {
+  background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.3) 50%, hsl(var(--muted)) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
