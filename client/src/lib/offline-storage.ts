@@ -100,4 +100,7 @@ export class OfflineStorage {
       request.onerror = () => reject(request.error);
     });
   }
+  
+  // Existing methods (saveTracks, clearOfflineData, etc.) remain largely the same
+  // but we will prefer using `addTrackWithAudio` for new additions.
 }
