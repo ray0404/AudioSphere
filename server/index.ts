@@ -68,8 +68,15 @@ app.use('/icon-512.png', express.static('client/public/icon-512.png'));
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    // Log error for debugging but don't crash in production
+    console.error('Server error:', err);
+    
     res.status(status).json({ message });
-    throw err;
+    
+    // Don't throw in production to prevent crashes
+    if (app.get("env") === "development") {
+      throw err;
+    }
   });
 
   // importantly only setup vite in development and after
@@ -92,5 +99,43 @@ app.use('/icon-512.png', express.static('client/public/icon-512.png'));
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+  });
+
+  // Add graceful shutdown handling
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+      console.log('Process terminated');
+    });
+  });
+
+  process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully');
+    server.close(() => {
+      console.log('Process terminated');
+    });
+  });
+
+  // Handle uncaught exceptions in production
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Shutting down due to uncaught exception');
+      server.close(() => {
+        process.exit(1);
+      });
+    } else {
+      throw err;
+    }
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Shutting down due to unhandled rejection');
+      server.close(() => {
+        process.exit(1);
+      });
+    }
   });
 })();
