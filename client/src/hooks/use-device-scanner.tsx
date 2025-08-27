@@ -64,30 +64,42 @@ export function useDeviceScanner() {
   
   const scanWithFileSystemAPI = useCallback(async (): Promise<DeviceTrack[]> => {
     const tracks: DeviceTrack[] = [];
-    const dirHandle = await (window as any).showDirectoryPicker();
-    const audioFiles: File[] = [];
-
-    const scanDirectory = async (handle: any) => {
-      for await (const entry of handle.values()) {
-        if (entry.kind === 'file' && isAudioFile(entry.name)) {
-          const file = await entry.getFile();
-          audioFiles.push(file);
-        } else if (entry.kind === 'directory') {
-          await scanDirectory(entry);
-        }
-      }
-    };
     
-    await scanDirectory(dirHandle);
-    setState(prev => ({ ...prev, foundFiles: audioFiles.length }));
+    try {
+      // Check if the API is available and working
+      if (!('showDirectoryPicker' in window)) {
+        throw new Error('File System Access API not supported');
+      }
+      
+      const dirHandle = await (window as any).showDirectoryPicker();
+      const audioFiles: File[] = [];
 
-    for (let i = 0; i < audioFiles.length; i++) {
-        const file = audioFiles[i];
-        setState(prev => ({ ...prev, scanProgress: Math.round(((i + 1) / audioFiles.length) * 100) }));
-        const track = await processAudioFile(file);
-        if (track) tracks.push(track);
+      const scanDirectory = async (handle: any) => {
+        for await (const entry of handle.values()) {
+          if (entry.kind === 'file' && isAudioFile(entry.name)) {
+            const file = await entry.getFile();
+            audioFiles.push(file);
+          } else if (entry.kind === 'directory') {
+            await scanDirectory(entry);
+          }
+        }
+      };
+      
+      await scanDirectory(dirHandle);
+      setState(prev => ({ ...prev, foundFiles: audioFiles.length }));
+
+      for (let i = 0; i < audioFiles.length; i++) {
+          const file = audioFiles[i];
+          setState(prev => ({ ...prev, scanProgress: Math.round(((i + 1) / audioFiles.length) * 100) }));
+          const track = await processAudioFile(file);
+          if (track) tracks.push(track);
+      }
+      return tracks;
+    } catch (error: any) {
+      // If File System Access API fails (cross-origin, security, etc.), throw to fallback
+      console.warn('File System Access API failed:', error.message);
+      throw new Error('Folder scanning not available in this context. Please use file selection instead.');
     }
-    return tracks;
   }, []);
 
   const scanWithFileInput = useCallback(async (files: FileList): Promise<DeviceTrack[]> => {
@@ -112,8 +124,22 @@ export function useDeviceScanner() {
       let deviceTracks: DeviceTrack[] = [];
 
       if (method === 'folder' && isFileSystemAccessSupported) {
-        deviceTracks = await scanWithFileSystemAPI();
-      } else {
+        try {
+          deviceTracks = await scanWithFileSystemAPI();
+        } catch (error: any) {
+          // Automatically fall back to file picker if folder scanning fails
+          console.warn('Folder scanning failed, falling back to file selection:', error.message);
+          toast({ 
+            title: "Folder Scanning Unavailable", 
+            description: "Using file selection instead. This may be due to browser security settings.",
+            variant: "destructive"
+          });
+          // Fall through to file input method
+        }
+      }
+      
+      // Use file input method if folder scanning failed or wasn't attempted
+      if (deviceTracks.length === 0) {
         const input = document.createElement('input');
         input.type = 'file';
         input.multiple = true;
@@ -121,11 +147,19 @@ export function useDeviceScanner() {
         
         const selectedFiles = await new Promise<FileList | null>((resolve) => {
             input.onchange = () => resolve(input.files);
+            input.onclick = () => {
+              // Reset any previous error state when user actively selects files
+              setState(prev => ({ ...prev, error: null }));
+            };
             input.click();
         });
         
-        if (selectedFiles) {
+        if (selectedFiles && selectedFiles.length > 0) {
             deviceTracks = await scanWithFileInput(selectedFiles);
+        } else if (method === 'files') {
+          // User cancelled file selection
+          setState(prev => ({ ...prev, isScanning: false }));
+          return [];
         }
       }
 
