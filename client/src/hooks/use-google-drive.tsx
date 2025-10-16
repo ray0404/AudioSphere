@@ -31,6 +31,7 @@ export function useGoogleDrive() {
 
   const GOOGLE_DRIVE_API_KEY = import.meta.env.VITE_GOOGLE_DRIVE_API_KEY || '';
   const SHARED_FOLDER_ID = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID || '';
+  
 
   const extractFolderIdFromUrl = (url: string): string | null => {
     // Extract folder ID from various Google Drive URL formats
@@ -150,15 +151,29 @@ The folder link appears valid but requires API authentication to access programm
   }, [toast]);
 
   const loadGoogleDriveFiles = useCallback(async () => {
-    if (!GOOGLE_DRIVE_API_KEY || !SHARED_FOLDER_ID) {
+    if (!GOOGLE_DRIVE_API_KEY) {
       setState(prev => ({ 
         ...prev, 
-        error: 'Google Drive API key or folder ID not configured' 
+        error: 'Google Drive API key not configured' 
       }));
       toast({
         title: "Configuration Error",
-        description: "Google Drive API credentials are not properly configured",
+        description: "Google Drive API key is not properly configured",
         variant: "destructive",
+      });
+      return;
+    }
+    
+    // If no folder ID is specified, prompt user to use URL method
+    if (!SHARED_FOLDER_ID) {
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Please use the folder URL method to connect to Google Drive' 
+      }));
+      toast({
+        title: "No Default Folder",
+        description: "Please enter a Google Drive folder URL to connect",
+        variant: "default",
       });
       return;
     }
