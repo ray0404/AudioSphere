@@ -4,6 +4,14 @@
 
 SoundWave is a progressive web audio player that puts you in control of your music. It's designed to be a modern, offline-first, and mobile-friendly music player that lets you play your own music from various sources, including local files, your device's file system, and Google Drive.
 
+## Screenshot
+
+![SoundWave Screenshot](Screenshot.jpg "SoundWave")
+
+## Live Site
+
+[https://player.rayvalentinmusic.cc/](https://player.rayvalentinmusic.cc/)
+
 ## Features
 
 *   **Multiple Music Sources:** Play music from local files, your device's file system, or Google Drive.
