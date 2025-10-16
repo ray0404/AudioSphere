@@ -20,7 +20,7 @@ import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DeviceScannerDialog } from "@/components/device-scanner-dialog";
 
-const SuspenseRoute = ({ component: Component, ...rest }) => (
+const SuspenseRoute = ({ component: Component, ...rest }: { component: React.ComponentType; [key: string]: any }) => (
   <Route {...rest}>
     <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>}>
       <Component />
