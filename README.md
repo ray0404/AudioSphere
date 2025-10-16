@@ -6,7 +6,7 @@ SoundWave is a progressive web audio player that puts you in control of your mus
 
 ## Screenshot
 
-![SoundWave Screenshot](attached-assets/Screenshot.jpg "SoundWave")
+![SoundWave Screenshot](attached_assets/Screenshot.jpg)
 
 ## Live Site
 
