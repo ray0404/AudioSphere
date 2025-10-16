@@ -35,8 +35,7 @@ function Router() {
       <SuspenseRoute path="/search" component={lazy(() => import("@/pages/search"))} />
       <SuspenseRoute path="/library" component={lazy(() => import("@/pages/library"))} />
       <Route path="/recent" component={() => <div className="p-6 text-white">Recently played coming soon...</div>} />
-      <SuspenseRoute path="/artists" component={lazy(() => import("@/pages/artists"))} />
-      <SuspenseRoute path="/albums" component={lazy(() => import("@/pages/albums"))} />
+
       <Route component={NotFound} />
     </Switch>
   );

@@ -93,19 +93,9 @@ export function useFileUpload() {
             },
           };
 
-          // Save to backend
-          const response = await apiRequest('POST', '/api/tracks', trackData);
-          const savedTrack = await response.json();
+          // Save to offline storage
+          const savedTrack = await offlineStorage.addTrackWithAudio(trackData, file);
           uploadedTracks.push(savedTrack);
-          
-          // Save audio blob to IndexedDB for offline use (only for larger files)
-          if (file.size >= 10 * 1024 * 1024) {
-            try {
-              await offlineStorage.saveAudioBlob(savedTrack.id, file);
-            } catch (err) {
-              console.warn('Failed to save audio for offline use:', err);
-            }
-          }
 
         } catch (fileError) {
           console.error(`Failed to process file ${file.name}:`, fileError);
@@ -119,8 +109,8 @@ export function useFileUpload() {
 
       setState({ isUploading: false, uploadProgress: 100, error: null });
       
-      // Invalidate tracks cache to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['/api/tracks'] });
+      // Invalidate local tracks cache to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['local-tracks'] });
       
       if (uploadedTracks.length > 0) {
         toast({
