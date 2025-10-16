@@ -20,51 +20,23 @@ import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DeviceScannerDialog } from "@/components/device-scanner-dialog";
 
+const SuspenseRoute = ({ component: Component, ...rest }) => (
+  <Route {...rest}>
+    <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>}>
+      <Component />
+    </React.Suspense>
+  </Route>
+);
+
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/search">
-        {() => {
-          const SearchPage = lazy(() => import("@/pages/search"));
-          return (
-            <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>}>
-              <SearchPage />
-            </React.Suspense>
-          );
-        }}
-      </Route>
-      <Route path="/library">
-        {() => {
-          const LibraryPage = lazy(() => import("@/pages/library"));
-          return (
-            <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>}>
-              <LibraryPage />
-            </React.Suspense>
-          );
-        }}
-      </Route>
+      <SuspenseRoute path="/search" component={lazy(() => import("@/pages/search"))} />
+      <SuspenseRoute path="/library" component={lazy(() => import("@/pages/library"))} />
       <Route path="/recent" component={() => <div className="p-6 text-white">Recently played coming soon...</div>} />
-      <Route path="/artists">
-        {() => {
-          const ArtistsPage = lazy(() => import("@/pages/artists"));
-          return (
-            <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>}>
-              <ArtistsPage />
-            </React.Suspense>
-          );
-        }}
-      </Route>
-      <Route path="/albums">
-        {() => {
-          const AlbumsPage = lazy(() => import("@/pages/albums"));
-          return (
-            <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>}>
-              <AlbumsPage />
-            </React.Suspense>
-          );
-        }}
-      </Route>
+      <SuspenseRoute path="/artists" component={lazy(() => import("@/pages/artists"))} />
+      <SuspenseRoute path="/albums" component={lazy(() => import("@/pages/albums"))} />
       <Route component={NotFound} />
     </Switch>
   );

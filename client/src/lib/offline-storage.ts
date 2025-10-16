@@ -103,4 +103,50 @@ export class OfflineStorage {
   
   // Existing methods (saveTracks, clearOfflineData, etc.) remain largely the same
   // but we will prefer using `addTrackWithAudio` for new additions.
+
+  async saveTracks(tracks: Track[]): Promise<void> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([TRACKS_STORE], 'readwrite');
+      const store = transaction.objectStore(TRACKS_STORE);
+      tracks.forEach(track => store.add(track));
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+  }
+
+  async saveAudioBlob(trackId: string, blob: Blob): Promise<void> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([AUDIO_STORE], 'readwrite');
+      const store = transaction.objectStore(AUDIO_STORE);
+      const request = store.add({ trackId, blob });
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async getStorageInfo(): Promise<{ usage: number; quota: number }> {
+    if (navigator.storage && navigator.storage.estimate) {
+      const estimation = await navigator.storage.estimate();
+      return {
+        usage: estimation.usage || 0,
+        quota: estimation.quota || 0,
+      };
+    }
+    return { usage: 0, quota: 0 };
+  }
+
+  async clearOfflineData(): Promise<void> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([TRACKS_STORE, AUDIO_STORE, PLAYLISTS_STORE, OFFLINE_QUEUE_STORE], 'readwrite');
+      transaction.objectStore(TRACKS_STORE).clear();
+      transaction.objectStore(AUDIO_STORE).clear();
+      transaction.objectStore(PLAYLISTS_STORE).clear();
+      transaction.objectStore(OFFLINE_QUEUE_STORE).clear();
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+  }
 }
