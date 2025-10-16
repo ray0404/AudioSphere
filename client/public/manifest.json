@@ -1,6 +1,6 @@
 {
   "name": "SoundWave - Progressive Music Player",
-  "short_name": "SoundWave",
+  "short_name": "SW-Dev",
   "description": "A comprehensive audio player supporting local files and device scanning with offline capability",
   "start_url": "/",
   "display": "standalone",
