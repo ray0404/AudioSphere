@@ -53,25 +53,30 @@ export function useOfflineSync() {
     }
   }, [isOnline, onlineTracks, offlineStorage]);
 
-  // Get tracks (offline or online)
-  const getTracks = async (): Promise<Track[]> => {
-    if (isOnline && onlineTracks) {
-      return onlineTracks;
-    }
-    
-    // Try to get from offline storage
-    try {
-      const offlineTracks = await offlineStorage.getTracks();
-      if (offlineTracks.length > 0) {
-        console.log('Serving tracks from offline storage');
-        return offlineTracks;
-      }
-    } catch (error) {
-      console.error('Failed to get offline tracks:', error);
-    }
+  // Get local tracks from IndexedDB
+  const { data: localTracks, isLoading: isLoadingLocal } = useQuery({
+    queryKey: ['local-tracks'],
+    queryFn: () => offlineStorage.getTracks(),
+    enabled: !isOnline, // Only run this query when offline
+  });
 
-    return [];
-  };
+  // Combined tracks query (stale-while-revalidate)
+  const { data: tracks, isLoading: isLoadingTracks } = useQuery<Track[]>(({
+    queryKey: ['tracks', isOnline],
+    queryFn: async () => {
+      if (isOnline) {
+        // Fetch from network
+        const onlineData = await queryClient.fetchQuery({ queryKey: ['/api/tracks'] });
+        if (onlineData) {
+          // In the background, update offline storage
+          offlineStorage.saveTracks(onlineData).catch(console.error);
+          return onlineData;
+        }
+      }
+      // Fallback to local storage if offline or network fails
+      return offlineStorage.getTracks();
+    },
+  }));
 
   // Save audio blob for offline playback
   const saveAudioForOffline = async (trackId: string, blob: Blob) => {
@@ -112,7 +117,8 @@ export function useOfflineSync() {
   return {
     isOnline,
     syncStatus,
-    getTracks,
+    tracks: tracks || [],
+    isLoading: isLoadingTracks || isLoadingLocal,
     saveAudioForOffline,
     getOfflineAudio,
     getStorageInfo,

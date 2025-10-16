@@ -117,29 +117,42 @@ export function useDeviceScanner() {
   }, []);
 
 
-  const scanDevice = useCallback(async (method: 'folder' | 'files', files?: FileList) => {
+  const scanDevice = useCallback(async (method: 'folder' | 'files') => {
+    if (state.isScanning) {
+      toast({
+        title: "Scan in Progress",
+        description: "A device scan is already running.",
+      });
+      return;
+    }
     setState({ isScanning: true, scanProgress: 0, foundFiles: 0, processedFiles: 0, error: null });
 
     try {
       let deviceTracks: DeviceTrack[] = [];
 
-      if (method === 'folder' && isFileSystemAccessSupported) {
+      if (method === 'folder') {
+        if (!isFileSystemAccessSupported) {
+          toast({ 
+            title: "Folder Scanning Not Supported", 
+            description: "Your browser does not support directory access. Please try selecting files instead.",
+            variant: "destructive"
+          });
+          setState(prev => ({ ...prev, isScanning: false }));
+          return [];
+        }
         try {
           deviceTracks = await scanWithFileSystemAPI();
         } catch (error: any) {
-          // Automatically fall back to file picker if folder scanning fails
-          console.warn('Folder scanning failed, falling back to file selection:', error.message);
+          console.warn('Folder scanning failed:', error.message);
           toast({ 
-            title: "Folder Scanning Unavailable", 
-            description: "Using file selection instead. This may be due to browser security settings.",
+            title: "Folder Scan Cancelled or Failed", 
+            description: "Could not access the selected folder. This can happen if you cancel the prompt or due to browser security settings.",
             variant: "destructive"
           });
-          // Fall through to file input method
+          setState(prev => ({ ...prev, isScanning: false }));
+          return [];
         }
-      }
-      
-      // Use file input method if folder scanning failed or wasn't attempted
-      if (deviceTracks.length === 0) {
+      } else { // method === 'files'
         const input = document.createElement('input');
         input.type = 'file';
         input.multiple = true;
@@ -147,16 +160,14 @@ export function useDeviceScanner() {
         
         const selectedFiles = await new Promise<FileList | null>((resolve) => {
             input.onchange = () => resolve(input.files);
-            input.onclick = () => {
-              // Reset any previous error state when user actively selects files
-              setState(prev => ({ ...prev, error: null }));
-            };
+            input.onabort = () => resolve(null);
+            input.oncancel = () => resolve(null);
             input.click();
         });
         
         if (selectedFiles && selectedFiles.length > 0) {
             deviceTracks = await scanWithFileInput(selectedFiles);
-        } else if (method === 'files') {
+        } else {
           // User cancelled file selection
           setState(prev => ({ ...prev, isScanning: false }));
           return [];
@@ -188,7 +199,7 @@ export function useDeviceScanner() {
 
       return savedTracks;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Scan failed';
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       setState({ isScanning: false, scanProgress: 0, foundFiles: 0, processedFiles: 0, error: errorMessage });
       toast({ title: "Scan Failed", description: errorMessage, variant: "destructive" });
       return [];
